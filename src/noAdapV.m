@@ -1114,35 +1114,6 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fIR
     end
     disp('sPSP complete');
 end
-function h = plotsPSP0(EPSP,IPSP,vleakage,fERange,fIRange,nv0,dur,nt,v0id)
-    nE = length(fERange);
-    nI = length(fIRange);
-    h = figure;
-    s = [0.1,1.0];
-    v = 1.0;
-    t = linspace(0,dur,nt);
-    subplot(2,2,2);
-    plotSinglePSP(0,s,v,fERange,t,EPSP,nE,nv0,v0id);
-    xlabel('f');
-    ylabel('t');
-    zlabel('EPSP (mV)');
-    subplot(2,2,4);
-    plotSinglePSP(2/3,s,v,fIRange,t,IPSP,nI,nv0,v0id);
-    xlabel('f');
-    ylabel('t');
-    zlabel('IPSP (mV)');
-    c = zeros(nv0,3);
-    c(:,3) = linspace(0.7,0,nv0)';
-    c = hsv2rgb(c);
-    subplot(1,2,1);
-    hold on
-    for iv0 = 1:nv0
-        plot(t,squeeze(vleakage),'Color',c(iv0,:));
-    end
-    xlabel('t');
-    ylabel('Membrane Potential (mV)');
-    title('leakage');
-end
 function [h,EPSP,IPSP,vleakage] = sPSP0_check(silico,tstep,vRange,fIRange,fERange,para,bool,name,dur,i,v0id)
     nv0 = length(vRange);
     nE = length(fERange);
@@ -1204,6 +1175,35 @@ function [h,EPSP,IPSP,vleakage] = sPSP0_check(silico,tstep,vRange,fIRange,fERang
     c(:,3) = linspace(0.7,0,nv0)';
     c = hsv2rgb(c);
     t = 0:tstep:dur;
+    subplot(1,2,1);
+    hold on
+    for iv0 = 1:nv0
+        plot(t,squeeze(vleakage),'Color',c(iv0,:));
+    end
+    xlabel('t');
+    ylabel('Membrane Potential (mV)');
+    title('leakage');
+end
+function h = plotsPSP0(EPSP,IPSP,vleakage,fERange,fIRange,nv0,dur,nt,v0id)
+    nE = length(fERange);
+    nI = length(fIRange);
+    h = figure;
+    s = [0.1,1.0];
+    v = 1.0;
+    t = linspace(0,dur,nt);
+    subplot(2,2,2);
+    plotSinglePSP(0,s,v,fERange,t,EPSP,nE,nv0,v0id);
+    xlabel('f');
+    ylabel('t');
+    zlabel('EPSP (mV)');
+    subplot(2,2,4);
+    plotSinglePSP(2/3,s,v,fIRange,t,IPSP,nI,nv0,v0id);
+    xlabel('f');
+    ylabel('t');
+    zlabel('IPSP (mV)');
+    c = zeros(nv0,3);
+    c(:,3) = linspace(0.7,0,nv0)';
+    c = hsv2rgb(c);
     subplot(1,2,1);
     hold on
     for iv0 = 1:nv0

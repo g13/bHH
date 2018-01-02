@@ -886,7 +886,7 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fIR
     nI = length(fIRange);
     nt = round(dur/tstep)+1;
     EPSP = zeros(nt,nE,ndt,nv0);
-    E_tmax=  zeros(nE,ndt,nv0);
+    E_tmax =  zeros(nE,ndt,nv0);
     IPSP = zeros(nt,nI,ndt,nv0);
     I_tmax = zeros(nI,ndt,nv0);
     vleakage = zeros(nt,ndt,nv0);
@@ -1135,23 +1135,23 @@ function [kV,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,ts
     dtOI = iidt:nt;
     dtl = length(dtOI);
     parfor iv0 = 1:nv0
-        param = para;
-        param.newv = vRange(iv0);
-        tmp = silico(name,v0,param,bool,tstep,dur,i,false);
-        vDoubletV(:,:,iv0) = squeeze(tmp(1,:,:));
-        vDoubletV(:,:,iv0) = vDoubletV(:,:,iv0) - repmat(vleakage(:,idt,iv0),[1,n1*n2]);
+       param = para;
+       param.newv = vRange(iv0);
+       tmp = silico(name,v0,param,bool,tstep,dur,i,false);
+       vDoubletV(:,:,iv0) = squeeze(tmp(1,:,:));
+       vDoubletV(:,:,iv0) = vDoubletV(:,:,iv0) - repmat(vleakage(:,idt,iv0),[1,n1*n2]);
     end
     for iv0 = 1:nv0
-        for iF = 1:n1
-            range = (iF-1)*n2+(1:n2);
-            v1V(range,dtOI,iv0) = (sPSP1(dtOI,iF,idt,iv0)*ones(1,n2))';
-            v2V(range,dtOI,iv0) = [sPSP2(1:dtl,:,iv0)]';
-        end
-        vaddV(:,dtOI,iv0) = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
-        parfor it = iidt:nt
-        %for it = 1:nt
-            [kV(it,1,iv0),pV(:,it,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vDoubletV(it,:,iv0)');
-        end
+       for iF = 1:n1
+           range = (iF-1)*n2+(1:n2);
+           v1V(range,dtOI,iv0) = (sPSP1(dtOI,iF,idt,iv0)*ones(1,n2))';
+           v2V(range,dtOI,iv0) = [sPSP2(1:dtl,:,iv0)]';
+       end
+       vaddV(:,dtOI,iv0) = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
+       parfor it = iidt:nt
+       %for it = 1:nt
+           [kV(it,1,iv0),pV(:,it,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vDoubletV(it,:,iv0)');
+       end
     end
 
     EI = v1V.*v2V;
