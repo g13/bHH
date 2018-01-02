@@ -1,6 +1,6 @@
-function check_Vrest(noAdap,model)
-    if nargin < 1
-        noAdap = false;
+function check_Vrest(model, noAdap)
+    if nargin < 2
+        noAdap = true;
     end
     %    mh,  n, p,qr,su
     %   iNa,iKd,iM,iL,iT
@@ -62,7 +62,7 @@ function check_Vrest(noAdap,model)
                56.9,    -70.4,   -57.90,   inf,     3.865,      58,    3.9,  0.0787,   inf,    inf,     502.0,     2,      1,          1;
                56.9,    -70.4,   -63.85,   inf,     4.50,       43,    4.7,    0.05,   inf,    inf,    1723.0,     2,      1,          1;
                56.9,    -70.4,   -58.79,   inf,     0.46,       60,    3.9,   0.021,   inf,    inf,    1454.0,     2,      1,          1;
-               56.9,    -70.4,   -67.17,   inf,     1.27,       32,    2.2,   0.071,   inf,    inf,     596.6,     2,      1,          1;
+               56.9,    -70.4,   -67.17,   inf,     1.27,       32,    2.2,   0.071,   inf,    inf,     596.6,     2,      1,          1; % No.44 rest firing
                56.9,    -70.4,   -60.49,   inf,     7.95,       55,    6.0,   0.039,   inf,    inf,    2023.0,     2,      1,          1;
     ... %*** vT for ferret, guinea-pig and cat associa. cortex is an initial guess, not provided in the paper %
                 ... %   RS ferret visual cortex   %
@@ -102,7 +102,7 @@ function check_Vrest(noAdap,model)
     para.gLeak = dataSet(select,5)./para.S*1e-6;
     para.gL = dataSet(select,9);
     if noAdap
-        para.gM = zeros(size(para.gM));
+        para.gM = zeros(size(para.gLeak));
     else
         para.gM = dataSet(select,8);
     end

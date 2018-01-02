@@ -87,10 +87,16 @@ function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
                87.5,   -69.85,   -52.0,     -1,    10.39,    113.9,  113.9,     inf,   inf,    0.4,       inf,     5,      1,          2,           -1];
     %           L=d,    vleak,      vT,     Vx,     gleak,     gNa,    gKd,    gM,     gL,     gT,     tau_max,   TYPE,    species,    posInBrain
     %           1         2         3       4         5         6       7       8       9       10      11          12      13          14
-    if noAdap = true;
-        load(['vRest-noAdap-',model,'.mat']);
+    if noAdap
+        vRestFile = ['vRest-noAdap-',model,'.mat'];
     else
-        load(['vRest-',model,'.mat']);
+        vRestFile = ['vRest-',model,'.mat'];
+    end
+    if exist(vRestFile)
+        load(vRestFile);
+    else
+        check_Vrest(model,noAdap);
+        load(vRestFile);
     end
     dataSet = [dataSet, vRest];
     N = size(dataSet,1);
@@ -126,7 +132,11 @@ function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
             case 'TR_somato_Rat'
                 select = find(abs(dataSet(:,1) - 87.5) < 1e-15 & dataSet(:,12) == 5 & dataSet(:,13) == 1 & dataSet(:,14) == 2);
         end
-    fname = [name,'-',theme,'-noAdap-',model];
+    if noAdap
+        fname = [name,'-',theme,'-noAdap-',model];
+    else
+        fname = [name,'-',theme,'-',model];
+    end
     para.select = select;
     
     para.S = pi*(dataSet(select,1)*1e-4).^2; % verified by Fig.2 in ref minimal HH, only the side area of the cylinder are included.
@@ -191,20 +201,19 @@ function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
         para.current = @(t,fCurrent)(1-sign(t-ct1))/2.*(1+sign(t-ct0))/2.*(1-mod(floor((t-50)/pwidth),2))*fCurrent;
     end
     save(['parameters-',fname,'.mat'],'para','bool','type','species','posInBrain','n');
-    n
-        if draw
-            vonly = false;
-            returnVonly = false;
-            cplot = false;
-            % cplot = true;
-            draw0 = true;
-            % draw0 = false;
-            f_E = 0e-6;
-            para.tE = 0;
-            f_I = 0e-6;
-            para.tI = 0;
-            v0Percent = 0.0;
-            fCurrent = 1e-4;
-            trace_plot(0.05,f_E,f_I,v0Percent,1000,fCurrent,name,'',draw0,vonly,returnVonly,@RK4,cplot,true);
-        end
+    if draw
+        vonly = false;
+        returnVonly = false;
+        cplot = false;
+        % cplot = true;
+        draw0 = true;
+        % draw0 = false;
+        f_E = 0e-6;
+        para.tE = 0;
+        f_I = 0e-6;
+        para.tI = 0;
+        v0Percent = 0.0;
+        fCurrent = 1e-4;
+        trace_plot(0.05,f_E,f_I,v0Percent,1000,fCurrent,name,'',draw0,vonly,returnVonly,@RK4,cplot,true);
+    end
 end

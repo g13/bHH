@@ -6,7 +6,7 @@ function revisitLeakage(name,picformat)
     mright = 0.0;   fwidth = width-mleft-width*mright;
     mtop = 0.0;     fheight = height-mbot-height*mtop;
     pos = [width, height, left,bot,fwidth,fheight];  
-    addpath('channels/');    
+    addpath('./channels/');    
     if ~isempty(picformat)
         if strcmp(picformat,'psc2')
             printDriver = ['-de',picformat];

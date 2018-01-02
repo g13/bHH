@@ -35,7 +35,7 @@ if ~isempty(picformat)
     end
     dpi = '-r300';
 end
-addpath('channels');
+addpath('./channels/');
 para.f_E = f_E;
 para.f_I = f_I;
 para.fCurrent = fCurrent;

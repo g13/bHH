@@ -13,7 +13,8 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     l0 = 240; % estimating length
     dur = 300; % bilinear k length
     dur0 = dur; % linear length
-    dtRange = [0:2:12,15:5:30,50,70,100,140,180,240];
+    %dtRange = [0:2:12,15:5:30,50,70,100,140,180,240];
+    dtRange = [0,15,30,50,100,160];
     ndt = length(dtRange);
     idtCase = [5,round(ndt/2),ndt-3];
     if nargin < 11
@@ -81,7 +82,6 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
             disp('model not implemented');
             return
     end
-    userpath([pwd,'/channels']);
     pname = ['parameters-',name,'-',theme,'-noAdap','-',model];
     disp(name);
     load([pname]);
@@ -90,6 +90,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     dir = [name,'-',theme,'-',model];
     name = dir;
     if ~exist(dir,'dir')
+        disp(['create folder', dir]);
         mkdir(dir);
     end
 %     loadData = false;
@@ -134,7 +135,10 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
 %     fE = (0.5:0.5:1.0) * 1e-6;
 %     fI = 0.5*1e-6;
     v0id = find(abs(v0 - 0.0)<1e-14);
-    assert(~isempty(v0id));
+    if isempty(v0id)
+        disp('need vrest in vrange');
+        assert(~isempty(v0id));
+    end
     nv0 = length(v0);
     iv0Case = [1,round(nv0/2),nv0];
     nvplot = length(iv0Case);
@@ -165,6 +169,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     % E I EI
     diri = [dir,'/',num2str(i)];
     if ~exist(diri,'dir')
+        disp(['create folder', diri]);
         mkdir(diri);
     end
     vRange = para.vRest(i) + (para.vT(i)-para.vRest(i))*v0;
