@@ -16,7 +16,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     %dtRange = [0:2:12,15:5:30,50,70,100,140,180,240];
     dtRange = [0,15,30,50,100,160];
     ndt = length(dtRange);
-    idtCase = [5,round(ndt/2),ndt-3];
+    idtCase = [1,round(ndt/2)];
     if nargin < 11
         avoidSpike = false;
         if nargin < 10
@@ -121,8 +121,8 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     ignore = 80;
     ignorefE = 0;
     ignorefI = 0; 
-    rateE = 100/1000; % Hz/1000
-    rateI = 100/1000;
+    rateE = 60/1000; % Hz/1000
+    rateI = 40/1000;
     para.fCurrent = 0;
     %fE = linspace(0.0,1.0,5) * 1e-5;
     %fE = fE(2:5);
@@ -157,6 +157,9 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     else
         delete(gcp('nocreate'));
     end
+    poolobj = gcp('nocreate');
+    disp(poolobj.NumWorkers);
+    feature('numcores');
     assert(nv0>1);
     nE = length(fE);
     nI = length(fI);
@@ -192,7 +195,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
                 fname = ['sPSP','-',name,'-',num2str(i)];
                 printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
             end
-            save(['single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
+            save(['../data/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
             toc;
         else
             load(['single-',name,'-',num2str(i),'th.mat']);
@@ -338,7 +341,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
                 para.f_E = [reshape(ones(nE,1)*fE,[nE*nE,1]),repmat(fE',[nE,1])];
                 para.tI = zeros(size(para.tE));
                 para.f_I = zeros(size(para.f_E));
-                [kVEE(:,idt,:),pv,vadd,vEEDoublet,vEE,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sEPSP,sEPSP0,vRange,pp0,idt);
+                [kVEE(:,idt,:),pv,vadd,vEEDoublet,vEE,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sEPSP,sEPSP0,vRange,pp0,idt,avoidSpike);
                 if dtplot
                     hEE0(idtplot) = drawExample(hEE0(idtplot),pv,vadd,vEEDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kVEE(:,idt,:),nE*nE,vRange,para.vRest(i),vEE,'V_{E}V_{E}','EE');
                 end
@@ -354,7 +357,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
                 para.f_I = [reshape(ones(nI,1)*fI,[nI*nI,1]),repmat(fI',[nI,1])];
                 para.tE = zeros(size(para.tI));
                 para.f_E = zeros(size(para.f_I));
-                [kVII(:,idt,:),pv,vadd,vIIDoublet,vII,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sIPSP,sIPSP0,vRange,pp0,idt);
+                [kVII(:,idt,:),pv,vadd,vIIDoublet,vII,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sIPSP,sIPSP0,vRange,pp0,idt,avoidSpike);
                 if dtplot
                     hII0(idtplot) = drawExample(hII0(idtplot),pv,vadd,vIIDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kVII(:,idt,:),nI*nI,vRange,para.vRest(i),vII,'V_{I}V_{I}','II');
                 end
@@ -370,7 +373,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
                 para.tE = zeros(nE*nI,1);
                 para.f_I = repmat(fI',[nE,1]);
                 para.tI = dtRange(idt)*ones(nE*nI,1);
-                [kVEI(:,idt,:),pv,vadd,vEIDoublet,vEI,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sEPSP,sIPSP0,vRange,pp0,idt);
+                [kVEI(:,idt,:),pv,vadd,vEIDoublet,vEI,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sEPSP,sIPSP0,vRange,pp0,idt,avoidSpike);
                 if dtplot
                     hEI0(idtplot) = drawExample(hEI0(idtplot),pv,vadd,vEIDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kVEI(:,idt,:),nE*nI,vRange,para.vRest(i),vEI,'V_{E}V_{I}','EI');
                 end
@@ -386,7 +389,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
                 para.tI = zeros(nE*nI,1);
                 para.f_E = repmat(fE',[nI,1]);
                 para.tE = dtRange(idt)*ones(nE*nI,1);
-                [kVIE(:,idt,:),pv,vadd,vIEDoublet,vIE,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sIPSP,sEPSP0,vRange,pp0,idt);
+                [kVIE(:,idt,:),pv,vadd,vIEDoublet,vIE,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sIPSP,sEPSP0,vRange,pp0,idt,avoidSpike);
                 if dtplot
                     hIE0(idtplot) = drawExample(hIE0(idtplot),pv,vadd,vIEDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kVIE(:,idt,:),nE*nI,vRange,para.vRest(i),vIE,'V_{I}V_{E}','IE');
                 end
@@ -398,7 +401,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
         end
         toc;
         disp('kV generated');
-        save([name,'-',num2str(i),'th'],'kVEE','kVII','kVEI','kVIE','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
+        save(['../data/',name,'-',num2str(i),'th'],'kVEE','kVII','kVEI','kVIE','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
         if draw
             assert(idtplot==ndtplot);
                 disp('producing figure');
@@ -622,6 +625,8 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
             dur = dur0 + para.tI;
             fname = ['simpleTest',num2str(dur),'-E',num2str(para.tE),'-I',num2str(para.tI),'-',name,'-',num2str(i),'th-v'];
         end
+        para.f_E
+        para.f_I
         if test && exist([fname,'.mat'],'file')
             load([fname,'.mat'],'tmp');
         else
@@ -1087,7 +1092,7 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fIR
             for idt = 1:ndt
                 for it = 1:nt
                     for iF = 1:nE
-                        assert(EPSP(it,iF,idt,iv0)>=0);
+                        assert(EPSP(it,iF,idt,iv0)<30);
                     end
                 end
             end
@@ -1260,7 +1265,8 @@ function [v,v1,v2,ind] = interpPSP(sPSP,vTarget,vRange)
         end
     end
 end
-function [kV,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,tstep,iidt,dur,i,vleakage,sPSP1,sPSP2,vRange,pp,idt)
+function [kV,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,tstep,iidt,dur,i,vleakage,sPSP1,sPSP2,vRange,pp,idt,avoidSpike)
+    %avoidSpike = false;
     global nvplot iv0Case
     n1 = size(sPSP1,2);
     n2 = size(sPSP2,2);
@@ -1289,6 +1295,16 @@ function [kV,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,ts
        h(:,:,iv0) = squeeze(tmp(4,:,:));
        vDoubletV(:,:,iv0) = vDoubletV(:,:,iv0) - repmat(vleakage(:,idt,iv0),[1,n1*n2]);
     end
+    if avoidSpike
+        for iv0 = 1:nv0
+            for iF = 1:n1*n2
+                for it = 1:nt
+                    assert(vDoubletV(it,iF,iv0)<=40);
+                end
+            end
+        end
+    end
+
     for iv0 = 1:nv0
        for iF = 1:n1
            range = (iF-1)*n2+(1:n2);
