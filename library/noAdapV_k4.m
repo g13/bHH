@@ -1,4 +1,4 @@
-function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0)
+function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI)
     global nvplot iv0Case;
     msgID = 'MATLAB:rankDeficientMatrix';
     warning('off',msgID);
@@ -14,26 +14,31 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     dur = 300; % bilinear k length
     dur0 = 300; % linear length
     dtRange = [0:2:12,15:5:30,50,70,110,150,190,270];
-    %dtRange = [0:6:12,18:12:30,54,78,126,174,212];
-    %dtRange = 0:2:l0;
     ndt = length(dtRange);
-    idtCase = [ndt-3,round(ndt/2),3];
-    if nargin < 9
-        v0 = -0.4:0.1:1.2;
-        if nargin < 8
-            npool = 1;
-            if nargin < 7
-                loadData = true;
-                if nargin < 6
-                    ppp = false;
-                    if nargin < 5
-                        draw = false;
-                        if nargin <4
-                            picformat = '';
-                            if nargin < 3
-                                model = 'HH';
-                                if nargin < 2
-                                    pick = 1;
+    %idtCase = [ndt-3,round(ndt/2),3];
+    idtCase = [1,round(ndt/2)];
+    if nargin < 10
+        fI = linspace(0.5,2.0,4) * 1e-5;
+        if nargin < 10
+            fE = linspace(0.125,0.5,4) * 1e-5;
+            if nargin < 9
+                v0 = -0.4:0.1:1.2;
+                if nargin < 8
+                    npool = 1;
+                    if nargin < 7
+                        loadData = true;
+                        if nargin < 6
+                            ppp = false;
+                            if nargin < 5
+                                draw = false;
+                                if nargin <4
+                                    picformat = '';
+                                    if nargin < 3
+                                        model = 'HH';
+                                        if nargin < 2
+                                            pick = 1;
+                                        end
+                                    end
                                 end
                             end
                         end
@@ -74,8 +79,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             disp('model not implemented');
             return
     end
-    userpath([pwd,'/channels']);
-    pname = ['parameters-',name,'-',theme,'-noAdap','-',model];
+    pname = ['../library/parameters-',name,'-',theme,'-noAdap','-',model];
     disp(name);
     load([pname]);
     i = pick;
@@ -84,6 +88,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     name = dir;
     if ~exist(dir,'dir')
         mkdir(dir);
+    else
+        rmdir(dir,'s');
     end
 %     loadData = false;
     testEE = true;
@@ -107,23 +113,14 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     ignore = 80;
     ignorefE = 0;
     ignorefI = 0; 
-    rateE = 100/1000; % Hz/1000
-    rateI = 120/1000;
+    rateE = 60/1000; % Hz/1000
+    rateI = 40/1000;
     para.fCurrent = 0;
-    %fE = linspace(0.0,1.0,5) * 1e-5;
-    %fE = fE(2:5);
-    %fE = (0.025:0.025:0.125) * 1e-6;
-    %fE = (0.25:0.25:1.0) * 1e-5;
-    %fE = (0.5:0.5:2.0) * 1e-5;
-    fE = (0.125:0.125:0.5) * 1e-5;
-    fE = fE(1:4);
-    fI = (0.5:0.5:2.0) * 1e-5;
-    fI = fI(1:4);
-    %fI = fE;
-%     fE = (0.5:0.5:1.0) * 1e-6;
-%     fI = 0.5*1e-6;
     v0id = find(abs(v0 - 0.0)<1e-14);
-    assert(~isempty(v0id));
+    if isempty(v0id)
+        disp('need vrest in vrange');
+        assert(~isempty(v0id));
+    end
     nv0 = length(v0);
     iv0Case = [1,round(nv0/2),nv0];
     nvplot = length(iv0Case);
@@ -142,6 +139,9 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     else
         delete(gcp('nocreate'));
     end
+    poolobj = gcp('nocreate');
+    disp(poolobj.NumWorkers);
+    feature('numcores');
     assert(nv0>1);
     nE = length(fE);
     nI = length(fI);
@@ -155,6 +155,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     diri = [dir,'/',num2str(i)];
     if ~exist(diri,'dir')
         mkdir(diri);
+    else
+        rmdir(diri,'s');
     end
     vRange = para.vRest(i) + (para.vT(i)-para.vRest(i))*v0;
     if ~loadData
@@ -176,10 +178,10 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 fname = ['sPSP','-',name,'-',num2str(i)];
                 printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
             end
-            save(['single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
+            save(['../library/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
             toc;
         else
-            load(['single-',name,'-',num2str(i),'th.mat']);
+            load(['../library/single-',name,'-',num2str(i),'th.mat']);
             delete([diri,'/*']);
             if dur==dur0
                 h = plotsPSP0(sEPSP0,sIPSP0,vleakage0,fE,fI,nv0,dur,nt,v0id);
@@ -214,7 +216,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             assert(nv0 == inv0);
             %return
         end
-        copyfile('noAdapV.m',[dir,'/noAdapV-',name,'-',num2str(i),'th.m']);
+        copyfile('noAdapV_k4.m',[dir,'/noAdapV-',name,'-',num2str(i),'th.m']);
         disp(datestr(datetime('now')));
         %
         if draw
@@ -382,7 +384,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
         toc;
         disp('kV generated');
-        save([name,'-',num2str(i),'th'],'kVEE','kVII','kVEI','kVIE','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
+        save(['../library/',name,'-',num2str(i),'th'],'kVEE','kVII','kVEI','kVIE','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
         if draw
             assert(idtplot==ndtplot);
         end
@@ -926,7 +928,7 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fIR
         for idt = 1:ndt
             for it = 1:nt
                 for iF = 1:nE
-                    assert(EPSP(it,iF,idt,iv0)>=0);
+                    assert(EPSP(it,iF,idt,iv0)<30);
                 end
             end
         end

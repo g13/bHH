@@ -9,8 +9,8 @@ function [sEPSP,sIPSP,t] = single_check_Dev(name,pick,model,picformat,draw,ppp,l
     FontSize = 16;
     set(0,'DefaultAxesFontSize',FontSize);
     set(0,'DefaultTextFontSize',FontSize-2);
-    userpath([pwd,'/channels']);
-    load(['parameters-',name]);
+    load(['../data/parameters-',name]);
+    addpath(genpath('./'));
     if ~exist(name,'dir')
         mkdir(name);
     end
@@ -449,7 +449,7 @@ function [sEPSP,sIPSP,t] = single_check_Dev(name,pick,model,picformat,draw,ppp,l
         save([name,'-',num2str(i),'th'],'kQEE','kEE','kEE0','kQII','kII','kII0','kQEI','kEI','kEI0','kQIE','kIE','kIE0','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i');
     else
         if multipleInput
-            load([name,'-',num2str(i),'th']);
+            load(['../data/',name,'-',num2str(i),'th']);
         end
     end
     if multipleInput

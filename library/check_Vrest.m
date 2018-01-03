@@ -160,9 +160,9 @@ function check_Vrest(model, noAdap)
     nstep = round(dur/tstep)+1;
     vRest = reshape(y(1,end,:),[n,1]);
     if noAdap
-        save(['vRest-noAdap-',model,'.mat'],'vRest');
+        save(['../library/vRest-noAdap-',model,'.mat'],'vRest');
     else
-        save(['vRest-',model,'.mat'],'vRest');
+        save(['../library/vRest-',model,'.mat'],'vRest');
     end
     %%
     vRestMinus10ms = reshape(y(1,nstep-round(10/tstep),:),[n,1]);

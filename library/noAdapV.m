@@ -82,7 +82,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
             disp('model not implemented');
             return
     end
-    pname = ['parameters-',name,'-',theme,'-noAdap','-',model];
+    pname = ['../library/parameters-',name,'-',theme,'-noAdap','-',model];
     disp(name);
     load([pname]);
     i = pick;
@@ -90,18 +90,19 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     dir = [name,'-',theme,'-',model];
     name = dir;
     if ~exist(dir,'dir')
-        disp(['create folder', dir]);
         mkdir(dir);
+    else
+        rmdir(dir,'s');
     end
 %     loadData = false;
     testEE = true;
     testII = true;
     testEI = true;
     testIE = true;
+    %singleStored = false;
     singleStored = false;
-    %singleStored = true;
     %meshK = true;
-    meshK = false;
+    meshK = true;
     kThres = 1;
 %    multipleInput = false;
     multipleInput = true;
@@ -124,16 +125,6 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     rateE = 60/1000; % Hz/1000
     rateI = 40/1000;
     para.fCurrent = 0;
-    %fE = linspace(0.0,1.0,5) * 1e-5;
-    %fE = fE(2:5);
-    %fE = (0.025:0.025:0.125) * 1e-6;
-    %fE = (0.25:0.25:1.0) * 1e-5;
-    %fE = linspace(0.125,0.5,4) * 1e-5;
-    %fE = fE(1:4);
-    %fI = (0.5:0.5:2.0) * 1e-5;
-    %fI = fE;
-%     fE = (0.5:0.5:1.0) * 1e-6;
-%     fI = 0.5*1e-6;
     v0id = find(abs(v0 - 0.0)<1e-14);
     if isempty(v0id)
         disp('need vrest in vrange');
@@ -172,8 +163,9 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     % E I EI
     diri = [dir,'/',num2str(i)];
     if ~exist(diri,'dir')
-        disp(['create folder', diri]);
         mkdir(diri);
+    else
+        rmdir(diri,'s');
     end
     vRange = para.vRest(i) + (para.vT(i)-para.vRest(i))*v0;
     if ~loadData
@@ -195,10 +187,10 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
                 fname = ['sPSP','-',name,'-',num2str(i)];
                 printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
             end
-            save(['../data/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
+            save(['../library/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
             toc;
         else
-            load(['single-',name,'-',num2str(i),'th.mat']);
+            load(['../library/single-',name,'-',num2str(i),'th.mat']);
             delete([diri,'/*']);
             if dur==dur0
                 h = plotsPSP0(sEPSP0,sIPSP0,vleakage0,fE,fI,nv0,dur,nt,v0id);
@@ -401,7 +393,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
         end
         toc;
         disp('kV generated');
-        save(['../data/',name,'-',num2str(i),'th'],'kVEE','kVII','kVEI','kVIE','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
+        save(['../library/',name,'-',num2str(i),'th'],'kVEE','kVII','kVEI','kVIE','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','ndt','E_tmax','I_tmax');
         if draw
             assert(idtplot==ndtplot);
                 disp('producing figure');
@@ -625,8 +617,6 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
             dur = dur0 + para.tI;
             fname = ['simpleTest',num2str(dur),'-E',num2str(para.tE),'-I',num2str(para.tI),'-',name,'-',num2str(i),'th-v'];
         end
-        para.f_E
-        para.f_I
         if test && exist([fname,'.mat'],'file')
             load([fname,'.mat'],'tmp');
         else

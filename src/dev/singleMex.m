@@ -12,8 +12,8 @@ switch iModel
     case 2
         model = 'IF';
 end
-libfile = [type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
-parafile = ['parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
+libfile = ['../../library/',type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
+parafile = ['../../library/parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
 cutoff = true;
 rk = 4; % 2,4
 run_t = 1000;
@@ -26,6 +26,9 @@ rEl = length(rE);
 assert(rEl==length(rI));
 seed = 13;
 load(libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kVEI','kVIE','kVEE','kVII','fE','fI','nE','ndt','l0');
+nE
+fE
+fI
 nt0 = size(sEPSP0,1);
 nbt = size(kVEI,1);
 ndt = size(kVEI,2);
@@ -65,19 +68,19 @@ for j=1:rEl
     tID = tID+1;
     pE = (tID <= nE);
     pI = (tID > nE);
-    tE = tin(pE);
-    tI = tin(pI);
-    Eid = tID(pE);
-    Iid = tID(pI)-nE;
+    tE = tin(pE)
+    tI = tin(pI)
+    Eid = tID(pE)
+    Iid = tID(pI)-nE
     Ein = length(tE);
     Iin = length(tI);
     figure;
     textFontSize = 8;
     minV = min([min(simV),min(biV),min(liV)]);
-    maxV = max([max(simV),max(biV),max(liV)]);
+    maxV = min([-55,max([max(simV),max(biV),max(liV)])]);
     subplot(2,1,1);
-    %plot(t,[simV,biV,liV]);
-    plot(t,[simV]);
+    plot(t,[simV,biV,liV]);
+    %plot(t,[simV]);
     xlabel('t ms');
     ylabel('mem mV');
     hold on
@@ -138,15 +141,53 @@ for j=1:rEl
     set(gca,'xticklabel',{'linear','bilinear'});
     ylabel('error per timestep mV');
     subplot(2,2,4);
-    [ax,h1,h2] = plotyy(t,biV-liV,t,[gE,gI]);
-    %h1.LineStyle = ':';
-    %h1.Color = 'k';
-    set(h1,'Color','k');
-    set(h1,'LineStyle',':');
-    set(h2(1),'Color','r');
-    set(h2(2),'Color','b');
-    xlabel('t ms');
-    ylabel('\Delta (bilinear-linear)');
+    dliV = liV - simV;
+    plot(t,dliV);
+    hold on
+    dbiV = biV - simV;
+    plot(t,dbiV);
+    legend({'\Delta(sim-li)','\Delta(sim-bi)'});
+    minV = min(min(dbiV),min(dliV));
+    maxV = max(max(dbiV),max(dliV));
+    vEtar = zeros(Ein,1);
+    plot(tE,minV*ones(1,Ein),'.r');
+    targetV = dliV;
+    for i=1:Ein
+        iv = floor(tE(i)/tstep);
+        jv = iv + 1;
+        vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+        plot([tE(i),tE(i)],[minV,vEtar],':r');
+        text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+        text(tE(i),minV+(vEtar-minV)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+     
+        iv = floor((tE(i)+edur)/tstep);
+        if iv+1 < run_nt
+            jv = iv + 1;
+            vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+            plot([tE(i),tE(i)]+edur,[vEtar,maxV],':r');
+            text(tE(i)+edur,maxV-(maxV-vEtar)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+            text(tE(i)+edur,maxV-(maxV-vEtar)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+        end
+    end
+    vItar = zeros(Iin,1);
+    plot(tI,minV*ones(1,Iin),'.b');
+    for i=1:Iin
+        iv = floor(tI(i)/tstep);
+        jv = iv + 1;
+        vItar(i) = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+        plot([tI(i),tI(i)],[minV,vItar(i)],':b');
+        text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+        text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+            
+        iv = floor((tI(i)+edur)/tstep);
+        if iv+1 < run_nt
+            jv = iv + 1;
+            vtar = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+            plot([tI(i),tI(i)]+edur,[vtar,maxV],':b');
+            text(tI(i)+edur,maxV-(maxV-vtar)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+            text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+        end
+    end
     saveas(gcf,['testMex-',num2str(j),'-E',num2str(rE(j)),'-I',num2str(rI(j)),'.fig']);
 end
 figure;

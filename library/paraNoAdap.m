@@ -88,9 +88,9 @@ function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
     %           L=d,    vleak,      vT,     Vx,     gleak,     gNa,    gKd,    gM,     gL,     gT,     tau_max,   TYPE,    species,    posInBrain
     %           1         2         3       4         5         6       7       8       9       10      11          12      13          14
     if noAdap
-        vRestFile = ['vRest-noAdap-',model,'.mat'];
+        vRestFile = ['../library/vRest-noAdap-',model,'.mat'];
     else
-        vRestFile = ['vRest-',model,'.mat'];
+        vRestFile = ['../library/vRest-',model,'.mat'];
     end
     if exist(vRestFile)
         load(vRestFile);
@@ -200,7 +200,7 @@ function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
     if pulse
         para.current = @(t,fCurrent)(1-sign(t-ct1))/2.*(1+sign(t-ct0))/2.*(1-mod(floor((t-50)/pwidth),2))*fCurrent;
     end
-    save(['parameters-',fname,'.mat'],'para','bool','type','species','posInBrain','n');
+    save(['../library/parameters-',fname,'.mat'],'para','bool','type','species','posInBrain','n');
     if draw
         vonly = false;
         returnVonly = false;

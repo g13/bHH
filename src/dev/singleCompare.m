@@ -12,8 +12,8 @@ switch iModel
     case 2
         model = 'IF';
 end
-libfile = [type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
-parafile = ['parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
+libfile = ['../library/',type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
+parafile = ['../library/parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
 cutoff = true;
 rk = 4; % 2,4
 run_t = 1000;
@@ -74,8 +74,6 @@ maxV = max([max(simV),max(biV),max(liV)]);
 subplot(2,1,1);
 plot(t,[simV,biV,liV]);
 hold on
-% plot(t,[simV,liV]);
-% plot(t,simV);
 vEtar = zeros(Ein,1);
 plot(tE,minV*ones(1,Ein),'.r');
 for i=1:Ein
@@ -115,7 +113,6 @@ for i=1:Iin
     end
 end
 legend({'sim','bi','li'});
-% legend({'sim','simq','bi','li'});
 ylim([minV,maxV]);
 subplot(2,2,3);
 hold on;
@@ -203,15 +200,3 @@ end
 % plot(t,gI);
 
 saveas(gcf,'test.fig');
-
-%%
-%figure;
-%hold on
-%for i=1:nv
-%plot3((1:ndur)'*ones(1,ndt),ones(ndur,1)*dtRange,kVII(:,:,i));
-%x = dtRange/tstep+1;
-%    for j=1:ndt
-%        plot3(x(j),dtRange(j),kVII(round(x(j)),j,i),'*');
-%    end
-%disp(num2str(i));
-%end

@@ -1,5 +1,5 @@
 picformat = '';
-theme = 'smallCorr';
+theme = 'test';
 iModel = 0; % 0 for HH 1 for EIF 2 for IF
 type = 'RS_exc_Rat';
 ith = 1;
@@ -11,14 +11,14 @@ switch iModel
     case 2
         model = 'IF';
 end
-libfile = [type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
-parafile = ['parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
+libfile = ['../../library/',type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
+parafile = ['../../library/parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
 cutoff = true;
-rk = 2; % 2,4
-run_t = 1000;
-ignore_t = 110;
-rE = 15; % Hz
-rI = 30;
+rk = 4; % 2,4
+run_t = 500;
+ignore_t = 10;
+rE = 240; % Hz
+rI = 10;
 seed = 13;
 load(libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kVEI','kVIE','kVEE','kVII','fE','fI','nE','ndt','l0');
 nt0 = size(sEPSP0,1);
@@ -127,7 +127,53 @@ plot([0,3],[0,0],':k');
 %     end
 % end
 subplot(2,2,4);
-plot(t,biV-liV);
+dliV = liV - simV;
+plot(t,dliV);
+hold on
+dbiV = biV - simV;
+plot(t,dbiV);
+legend({'\Delta(sim-li)','\Delta(sim-bi)'});
+minV = min(min(dbiV),min(dliV));
+maxV = max(max(dbiV),max(dliV));
+vEtar = zeros(Ein,1);
+plot(tE,minV*ones(1,Ein),'.r');
+targetV = dliV;
+for i=1:Ein
+    iv = floor(tE(i)/tstep);
+    jv = iv + 1;
+    vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+    plot([tE(i),tE(i)],[minV,vEtar],':r');
+    text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+    text(tE(i),minV+(vEtar-minV)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+ 
+    iv = floor((tE(i)+edur)/tstep);
+    if iv+1 < run_nt
+        jv = iv + 1;
+        vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+        plot([tE(i),tE(i)]+edur,[vEtar,maxV],':r');
+        text(tE(i)+edur,maxV-(maxV-vEtar)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+        text(tE(i)+edur,maxV-(maxV-vEtar)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+    end
+end
+vItar = zeros(Iin,1);
+plot(tI,minV*ones(1,Iin),'.b');
+for i=1:Iin
+    iv = floor(tI(i)/tstep);
+    jv = iv + 1;
+    vItar(i) = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+    plot([tI(i),tI(i)],[minV,vItar(i)],':b');
+    text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+    text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+        
+    iv = floor((tI(i)+edur)/tstep);
+    if iv+1 < run_nt
+        jv = iv + 1;
+        vtar = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+        plot([tI(i),tI(i)]+edur,[vtar,maxV],':b');
+        text(tI(i)+edur,maxV-(maxV-vtar)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+        text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+    end
+end
 % tjd = 9;
 % dt = tI(tid) - tI(tjd);
 % idt = find(dtRange-dt>0,1,'first');
@@ -144,4 +190,3 @@ plot(t,biV-liV);
 % plot(t,gI);
 
 saveas(gcf,'testMex.fig');
-
