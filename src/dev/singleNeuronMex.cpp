@@ -22,7 +22,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double cpu_t_sim, cpu_t_bilinear, cpu_t_linear;
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
     struct timespec tpS, tpE;
-    unsigned int ith,i,j,k,model,nt,rk;
+    unsigned int ith,i,j,k,nt;
     double *rE, *rI, run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir, rEt, rIt;
     double gNa, vNa, gK, vK, gLeak, vLeak, vT, vinit, vE, vI, vRest, DeltaT, S;
     double tsp_sim, tsp_bi, tsp_li, tref;
@@ -35,7 +35,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     vector<double> hEb, hEl, hIb, hIl, hE, hI;
     vector<size> crossb, crossl;
     bool cutoff;
-    unsigned int seed;
 	//unsigned int seed = static_cast<unsigned int>(std::time(NULL));
 
     size_t lib_file_l = mxGetN(prhs[0])+1;
@@ -63,14 +62,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     for (i=0;i<rIl-1;i++) cout << rI[i] << ", ";
     cout << rI[rIl-1] << endl;
 
-    model = static_cast<unsigned int>(mxGetScalar(prhs[5]));
+    unsigned int model = static_cast<unsigned int>(mxGetScalar(prhs[5]));
     run_t = mxGetScalar(prhs[6]);
     ignore_t = mxGetScalar(prhs[7]);
     vinit = mxGetScalar(prhs[8]);
-    rk = mxGetScalar(prhs[9]);
+    unsigned int rk = mxGetScalar(prhs[9]);
     cutoff = mxGetScalar(prhs[10]);
-    seed = static_cast<unsigned int>(mxGetScalar(prhs[11]));
+    unsigned int seed = static_cast<unsigned int>(mxGetScalar(prhs[11]));
     tref = mxGetScalar(prhs[12]);
+    unsigned int afterSpikeBehavior = static_cast<unsigned int>(mxGetScalar(prhs[13]));
+    bool spikeShape = static_cast<bool>(mxGetScalar(prhs[14]));
+    bool kVStyle = static_cast<bool>(mxGetScalar(prhs[15]));
     
 
     openMat(matFile,para_file);
@@ -223,10 +225,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         // bilinear
         clock_gettime(clk_id,&tpS);
         nc = 0;
-        /*switch (model) {   
+        switch (model) {   
             case 0: //HH
                 neuron.vThres = vRest + (vT -vRest)*rHH;
-                nc = bilinear_HH(biV, neuroLib, neuron, run_t, ignore_t, tsp_bi);
+                nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, rk, afterSpikeBehavior, spikeShape, kVStyle);
                 break;
             case 1: //EIF
                 neuron.vThres = vNa;
@@ -236,7 +238,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                 neuron.vThres = vT;
                 //bilinear_IF();
                 break;
-        }*/
+        }
         clock_gettime(clk_id,&tpE);
         cpu_t_bilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "bilinear est. ended, took " << cpu_t_bilinear << "s" << endl;
@@ -247,7 +249,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nc = 0;
         switch (model) {   
             case 0: //HH
-                linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, rk);
+                nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, rk, afterSpikeBehavior, spikeShape);
                 break;
             case 1: //EIF
                 neuron.vThres = vNa;

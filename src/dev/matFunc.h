@@ -30,6 +30,23 @@ void del4d(T ****ptr, U *dimSize) {
 }
 
 template<typename T, typename U>
+void del6d(T ******ptr, U *dimSize) {
+    U i,j,k,l;
+    for (i=0; i<dimSize[0]; i++) {
+        for (j=0; j<dimSize[1]; j++) {
+            for (k=0; k<dimSize[2]; k++) {
+                for (l=0; l<dimSize[3]; l++)
+                    delete []ptr[i][j][k][l];
+                delete []ptr[i][j][k];
+            }
+            delete []ptr[i][j];
+        }
+        delete []ptr[i];
+    }
+    delete []ptr;
+}
+
+template<typename T, typename U>
 void disp1d(T v, U dimSize) {
     U i;
     std::cout << "{";
@@ -116,6 +133,31 @@ void pointer4d(T**** &ptr, T* source, size *dimSize) {
                 ptr[i][j][k] = source + dimSize[1]*dimSize[2]*dimSize[3]*i \
                                                  + dimSize[2]*dimSize[3]*j \
                                                             + dimSize[3]*k;
+            }
+        }
+    }
+}
+
+template<typename T> 
+void pointer6d(T****** &ptr, T* source, size *dimSize) {
+    size i,j,k,l,m;
+    ptr = new T*****[dimSize[0]];
+    for (i=0; i<dimSize[0]; i++) {
+        ptr[i] = new T****[dimSize[1]];
+        for (j=0; j<dimSize[1]; j++) {
+            ptr[i][j] = new T***[dimSize[2]];
+            for (k=0; k<dimSize[2]; k++) {
+                ptr[i][j][k] = new T**[dimSize[3]];
+                for (l=0; l<dimSize[3]; l++) {
+                    ptr[i][j][k][l] = new T*[dimSize[4]];
+                    for (m=0; m<dimSize[4]; m++) {
+                        ptr[i][j][k][l][m] = source + dimSize[1]*dimSize[2]*dimSize[3]*dimSize[4]*dimSize[5]*i \
+                                                                +dimSize[2]*dimSize[3]*dimSize[4]*dimSize[5]*j \
+                                                                           +dimSize[3]*dimSize[4]*dimSize[5]*k \
+                                                                                      +dimSize[4]*dimSize[5]*l \
+                                                                                                 +dimSize[5]*m;
+                    }
+                }
             }
         }
     }

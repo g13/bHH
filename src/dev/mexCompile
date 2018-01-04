@@ -1,6 +1,6 @@
 #!/bin/bash
 #path=/home/daiwei/Projects/NN_bilinear/Source/
-path=/scratch/wd554/bilinearRule/HH/NN_bilinear/dev/
+path=/scratch/wd554/bilinearRule/bHH/src/dev/
 file=singleNeuronMex
 suffix=cpp
 #matlabroot=/usr/local/MATLAB/R2014a

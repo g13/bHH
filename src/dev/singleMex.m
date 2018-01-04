@@ -38,8 +38,11 @@ edur = l0 - ignore_t;
 tstep = dur/(ndur-1);
 run_nt = round(run_t/tstep) + 1;
 vinit = vRange(2);
+afterSpikeBehavior = 2;
+spikeShape = true;
+kVStyle = false;
 [cpuTimeAndTsp,outputMats,extIns,inIDs] = ...
-    singleNeuronMex(libfile,parafile,ith,rE,rI,iModel,run_t,ignore_t,vinit,rk,cutoff,seed,tref);
+    singleNeuronMex(libfile,parafile,ith,rE,rI,iModel,run_t,ignore_t,vinit,rk,cutoff,seed,tref,afterSpikeBehavior,spikeShape,kVStyle);
 [printDriver,dpi,pos0,picformat] = picStd(picformat);
 FontSize = 16;
 set(0,'DefaultAxesFontSize',FontSize);
@@ -53,7 +56,7 @@ err = zeros(rEl,2,2);
 for j=1:rEl
     outputMat = outputMats(:,:,j);
     extIn = extIns{j};
-    tID = -inIDs{j};
+    tID = inIDs{j};
     simV = outputMat(:,1);
     biV  = outputMat(:,2);
     liV  = outputMat(:,3);
