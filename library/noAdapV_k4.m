@@ -1,4 +1,4 @@
-function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI)
+function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored)
     global nvplot iv0Case;
     msgID = 'MATLAB:rankDeficientMatrix';
     warning('off',msgID);
@@ -17,26 +17,29 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
-    if nargin < 12
-        fI = linspace(0.5,2.0,4) * 1e-5;
-        if nargin < 11
-            fE = linspace(0.125,0.5,4) * 1e-5;
-            if nargin < 10
-                v0 = -0.4:0.1:1.2;
-                if nargin < 9
-                    npool = 1;
-                    if nargin < 8
-                        loadData = true;
-                        if nargin < 7
-                            ppp = false;
-                            if nargin < 6
-                                draw = false;
-                                if nargin < 5
-                                    picformat = '';
-                                    if nargin < 4
-                                        model = 'HH';
-                                        if nargin < 3
-                                            pick = 1;
+    if nargin < 13
+        singleStored = false;
+        if nargin < 12
+            fI = linspace(0.5,2.0,4) * 1e-5;
+            if nargin < 11
+                fE = linspace(0.125,0.5,4) * 1e-5;
+                if nargin < 10
+                    v0 = -0.4:0.1:1.2;
+                    if nargin < 9
+                        npool = 1;
+                        if nargin < 8
+                            loadData = true;
+                            if nargin < 7
+                                ppp = false;
+                                if nargin < 6
+                                    draw = false;
+                                    if nargin < 5
+                                        picformat = '';
+                                        if nargin < 4
+                                            model = 'HH';
+                                            if nargin < 3
+                                                pick = 1;
+                                            end
                                         end
                                     end
                                 end
@@ -97,7 +100,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     testEI = true;
     testIE = true;
     %singleStored = false;
-    singleStored = true;
 %    multipleInput = false;
     multipleInput = true;
 %    simpleTest = true;
@@ -105,7 +107,9 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     test = false;
 %    test = true;
     assert(dtRange(ndt)<dur);
-    assert((l0-dtRange(ndt-1))<=(dur-dtRange(ndt)));
+    for idt=1:ndt
+        assert((dur - dtRange(ndt)-dtRange(ndt-1))<=(dur-dtRange(ndt)));
+    end
     %idtCase = [1,round(ndt/2),ndt-1];
     ndtplot = length(idtCase);
 
@@ -385,7 +389,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
         toc;
         disp('kV generated');
-        save(['../library/',name,'-',num2str(i),'th'],'kV','kEE','kIE','kEI','kII','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
+        save(['../library/',name,'-',num2str(i),'th'],'kV','kEE','kIE','kEI','kII','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','ndt','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
         if draw
             assert(idtplot==ndtplot);
         end

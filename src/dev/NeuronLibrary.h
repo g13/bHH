@@ -144,7 +144,6 @@ typedef struct NeuronLibrary
     
         readVar(ith,"i", pmat, file);
         readVar(dur,"dur", pmat, file);
-        readVar(l0,"l0", pmat, file);
         //readVar(vThres,"vThres", pmat, file);
         //readVar(vReset,"vReset", pmat, file);
         readVar(ei,"ei", pmat, file);
@@ -169,6 +168,12 @@ typedef struct NeuronLibrary
         for (i=0; i<ndt; i++){
             idtRange[i] = static_cast<size>(round(dtRange[i]/tstep));
             assert(idtRange[i]*tstep-dtRange[i] < 1e-12);
+        }
+        for (i=1; i<ndt; i++) {
+            if (nt - idtRange[i] < idtRange[ndt-1] - idtRange[i-1]) {
+                std::cout << "check the " << i << "th entry of dtRange" << std::endl;
+                assert(nt - idtRange[i] >= idtRange[ndt-1] - idtRange[i-1]);
+            }
         }
     }
     // clear mem

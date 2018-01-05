@@ -17,6 +17,11 @@ using std::vector;
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     // prhs[] ~ lib_file, para_file, ith, rE, rI, model, run_t, ignore_t, vinit
+    
+    std::ofstream out("sN.log");
+    std::streambuf *coutbuf = std::cout.rdbuf(); //save old buf
+    std::cout.rdbuf(out.rdbuf()); //redirect std::cout to out.txt!
+
     char *lib_file,*para_file;
     mxArray *para, *tmp;
     double cpu_t_sim, cpu_t_bilinear, cpu_t_linear;
@@ -71,7 +76,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     cutoff = mxGetScalar(prhs[10]);
     unsigned int seed = static_cast<unsigned int>(mxGetScalar(prhs[11]));
     tref = mxGetScalar(prhs[12]);
-    unsigned int afterSpikeBehavior = static_cast<unsigned int>(mxGetScalar(prhs[13]));
+    unsigned int afterCrossBehavior = static_cast<unsigned int>(mxGetScalar(prhs[13]));
     bool spikeShape = static_cast<bool>(mxGetScalar(prhs[14]));
     bool kVStyle = static_cast<bool>(mxGetScalar(prhs[15]));
     
@@ -133,14 +138,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     //tmp = new mxArray*[rEl];
     plhs[2] = mxCreateCellMatrix(rEl,1);
     plhs[3] = mxCreateCellMatrix(rEl,1);
-    plhs[4] = mxCreateCellMatrix(rEl,1);
+    plhs[4] = mxCreateCellMatrix(rEl*3,1);
     unsigned int nc;
-    double rHH = 1.3;
-    double rLinear = 0.7;
+    double rHH = 1.0;
+    double rLinear = 0.8;
     double rBilinear = rLinear;
-    double vCrossl = vRest + (vT -vRest)*rLinear;
+    double vCrossl = vRest + (vT -vRest);
     double vBackl = vRest + (vT -vRest)*rLinear;
-    double vCrossb = vRest + (vT -vRest)*rBilinear;
+    double vCrossb = vRest + (vT -vRest);
     double vBackb = vRest + (vT -vRest)*rBilinear;
     cout << " linear -> HH  " << vCrossl << endl;
     cout << " HH -> linear " << vBackl << endl;
@@ -233,7 +238,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         switch (model) {   
             case 0: //HH
                 neuron.vThres = vRest + (vT -vRest)*rHH;
-                nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, rk, afterSpikeBehavior, spikeShape, kVStyle);
+                nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, rk, afterCrossBehavior, spikeShape, kVStyle);
                 break;
             case 1: //EIF
                 neuron.vThres = vNa;
@@ -254,7 +259,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         nc = 0;
         switch (model) {   
             case 0: //HH
-                nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, rk, afterSpikeBehavior, spikeShape);
+                nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, rk, afterCrossBehavior, spikeShape);
                 break;
             case 1: //EIF
                 neuron.vThres = vNa;
@@ -337,6 +342,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
         neuron.clear();
     
+        tsp_sim.clear();
+        tsp_bi.clear();
+        tsp_li.clear();
         gE.clear();
         gI.clear();
         gEb.clear();
@@ -357,6 +365,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         hl.clear();
         mb.clear();
         nb.clear();
+        simV.clear();
+        biV.clear();
+        liV.clear();
     }
     neuroLib.clearLib();
     cout << "size: " <<  sizeof(size) << " bytes" << endl;

@@ -1,9 +1,10 @@
+format long
 picformat = '';
 theme = 'test';
 iModel = 0; % 0 for HH 1 for EIF 2 for IF
 type = 'RS_exc_Rat';
 ith = 1;
-tref = 1;
+tref = 7;
 switch iModel 
     case 0
         model = 'HH';
@@ -20,27 +21,24 @@ run_t = 1000;
 ignore_t = 10;
 % rE = [15,20,25,30,35,40,45]; % Hz
 % rI = [30,35,40,45,50,55,60];
-rE = [50];
+rE = [70];
 rI = [40];
 rEl = length(rE);
 assert(rEl==length(rI));
 seed = 13;
-load(libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kVEI','kVIE','kVEE','kVII','fE','fI','nE','ndt','l0');
-nE
-fE
-fI
-nt0 = size(sEPSP0,1);
-nbt = size(kVEI,1);
-ndt = size(kVEI,2);
-nv = length(vRange);
-ndur = size(sEPSP,1);
+load(libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kV','kEI','kIE','kEE','kII','fE','fI','nE','ndt','l0');
+nt0 = size(sEPSP0,1)
+nt = size(kEI,1)
+ndt = size(kEI,2)
+nv = length(vRange)
+ndur = size(sEPSP,1)
 edur = l0 - ignore_t;
-tstep = dur/(ndur-1);
+tstep = dur/(ndur-1)
 run_nt = round(run_t/tstep) + 1;
 vinit = vRange(2);
 afterSpikeBehavior = 2;
 spikeShape = true;
-kVStyle = false;
+kVStyle = true;
 [cpuTimeAndTsp,outputMats,extIns,inIDs,tspCell] = ...
     singleNeuronMex(libfile,parafile,ith,rE,rI,iModel,run_t,ignore_t,vinit,rk,cutoff,seed,tref,afterSpikeBehavior,spikeShape,kVStyle);
 [printDriver,dpi,pos0,picformat] = picStd(picformat);
@@ -57,9 +55,9 @@ for j=1:rEl
     outputMat = outputMats(:,:,j);
     extIn = extIns{j};
     tID = inIDs{j};
-    tsp_sim = tsp{j};
-    tsp_bi = tsp{j+1};
-    tsp_li = tsp{j+2};
+    tsp_sim = tspCell{j};
+    tsp_bi = tspCell{j+1};
+    tsp_li = tspCell{j+2};
     simV = outputMat(:,1);
     biV  = outputMat(:,2);
     liV  = outputMat(:,3);
@@ -74,10 +72,10 @@ for j=1:rEl
     tID = tID+1;
     pE = (tID <= nE);
     pI = (tID > nE);
-    tE = tin(pE)
-    tI = tin(pI)
-    Eid = tID(pE)
-    Iid = tID(pI)-nE
+    tE = tin(pE);
+    tI = tin(pI);
+    Eid = tID(pE);
+    Iid = tID(pI)-nE;
     Ein = length(tE);
     Iin = length(tI);
     figure;
@@ -85,7 +83,10 @@ for j=1:rEl
     minV = min([min(simV),min(biV),min(liV)]);
     maxV = min([-55,max([max(simV),max(biV),max(liV)])]);
     subplot(2,1,1);
+    hold on
     plot(t,[simV,biV,liV]);
+    plot(t,gE,':r');
+    plot(t,gI,':b');
     %plot(t,[simV]);
     xlabel('t ms');
     ylabel('mem mV');

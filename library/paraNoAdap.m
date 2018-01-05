@@ -189,17 +189,17 @@ function paraNoAdap(model,name,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
     pwidth = 20;
     step = true;
     % step = false;
-    pulse = false;
+    %pulse = false;
     % pulse = true;
     % para.current = @(t,fCurrent) fCurrent./para.S;
     %%% step current
-    if step
-        para.current = @(t,fCurrent) (1+sign(t-ct0))/2.*fCurrent + (1-sign(t-ct0))/2.*0.0 - (1+sign(t-ct1))/2.*fCurrent;
-    end
-    %%% pulse current
-    if pulse
-        para.current = @(t,fCurrent)(1-sign(t-ct1))/2.*(1+sign(t-ct0))/2.*(1-mod(floor((t-50)/pwidth),2))*fCurrent;
-    end
+    %if step
+    %    para.current = @(t,fCurrent) (1+sign(t-ct0))/2.*fCurrent + (1-sign(t-ct0))/2.*0.0 - (1+sign(t-ct1))/2.*fCurrent;
+    %end
+    %%%% pulse current
+    %if pulse
+    %    para.current = @(t,fCurrent)(1-sign(t-ct1))/2.*(1+sign(t-ct0))/2.*(1-mod(floor((t-50)/pwidth),2))*fCurrent;
+    %end
     save(['../library/parameters-',fname,'.mat'],'para','bool','type','species','posInBrain','n');
     if draw
         vonly = false;
