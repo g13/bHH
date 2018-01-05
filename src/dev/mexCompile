@@ -1,9 +1,7 @@
 #!/bin/bash
-#path=/home/daiwei/Projects/NN_bilinear/Source/
-path=/scratch/wd554/bilinearRule/bHH/src/dev/
+path=./
 file=singleNeuronMex
 suffix=cpp
-#matlabroot=/usr/local/MATLAB/R2014a
-matlabroot=/share/apps/NYUAD/matlab/R2015b
+matlabroot=/usr/local/MATLAB/R2014b
 
 g++ -fmax-errors=2 -DMX_COMPAT_32 -D_GNU_SOURCE -DMATLAB_MEX_FILE -I"${matlabroot}/extern/include" -fsanitize=leak -fbounds-check -fexceptions -fPIC -fno-omit-frame-pointer -pthread -std=c++11 -O -DNDEBUG -Wl,--version-script,"${matlabroot}/extern/lib/glnxa64/mexFunction.map" ${path}${file}.${suffix} -static-libstdc++ -static-libgcc -pthread -Wl,--no-undefined -shared -g -Wl,-rpath-link,${matlabroot}/bin/glnxa64 -L"${matlabroot}/bin/glnxa64" -lmx -lmex -lmat -o ${file}.mexa64
