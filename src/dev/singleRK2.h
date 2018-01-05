@@ -91,7 +91,7 @@ void getCond2t(double gE, double gI, double hE, double hI, double &gEr, double &
     }
 }
 
-unsigned int RK2_IF(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, Neuron neuron, double *pairs, double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, bool cutoff, bool eif, double &tsp) {
+unsigned int RK2_IF(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, Neuron neuron, double *pairs, double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, bool cutoff, bool eif, std::vector<double> &tsp) {
     unsigned int i, spikeCount = 0;
     double fk[2], vThres, tstep2 = tstep/2;
     double gEr, gIr;
@@ -108,14 +108,14 @@ unsigned int RK2_IF(std::vector<double> &v, std::vector<double> &gE, std::vector
 
         if (v[i]> vThres) {
             spikeCount = spikeCount + 1;
-            tsp = (vThres-v[i-1])/(v[i]-v[i-1])*tstep;
-            getCond2t(gE[i-1],gI[i-1],hE[i-1],hI[i-1],gEr,gIr,tinBin[i],fBin[i],tsp,(i-1)*tstep,tau_er,tau_ed,tau_ir,tau_id);
+            tsp.push_back((vThres-v[i-1])/(v[i]-v[i-1])*tstep);
+            getCond2t(gE[i-1],gI[i-1],hE[i-1],hI[i-1],gEr,gIr,tinBin[i],fBin[i],tsp.back(),(i-1)*tstep,tau_er,tau_ed,tau_ir,tau_id);
             fk[0] = fk_IF(pairs[9],gEr,gIr,pairs,eif);
-            fk[1] = fk_IF(pairs[9]+fk[0]*(tstep-tsp),gE[i],gI[i],pairs,eif);
-            v[i] = pairs[9] + (tstep-tsp)/2*(fk[0]+fk[1]);
+            fk[1] = fk_IF(pairs[9]+fk[0]*(tstep-tsp.back()),gE[i],gI[i],pairs,eif);
+            v[i] = pairs[9] + (tstep-tsp.back())/2*(fk[0]+fk[1]);
             if (v[i] > vThres) std::cout << "use smaller tstep" << std::endl;
             if (cutoff) {
-                tsp = (i-1) * tstep + tsp; 
+                //tsp = (i-1) * tstep + tsp; 
                 break;
             }
         }
@@ -123,7 +123,7 @@ unsigned int RK2_IF(std::vector<double> &v, std::vector<double> &gE, std::vector
     return spikeCount;
 }	
 
-unsigned int RK2_HH(std::vector<double> &v, std::vector<double> &m, std::vector<double> &n,std::vector<double> &h, std::vector<double> &gE,  std::vector<double> &gI, Neuron neuron, double *pairs, double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, double &tsp) {
+unsigned int RK2_HH(std::vector<double> &v, std::vector<double> &m, std::vector<double> &n,std::vector<double> &h, std::vector<double> &gE,  std::vector<double> &gI, Neuron neuron, double *pairs, double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, std::vector<double> &tsp) {
     unsigned int i, spikeCount = 0;
     double mk[2],nk[2],hk[2],fk[2];
     double vT = pairs[8];
@@ -150,7 +150,7 @@ unsigned int RK2_HH(std::vector<double> &v, std::vector<double> &m, std::vector<
         if (v[i]> neuron.vThres + (neuron.vThres-neuron.vReset)*2 && !spiking) {
             spikeCount = spikeCount + 1;
             if (v[i]<=v[i-1]) {
-                tsp = (i-1)*tstep;
+                tsp.push_back((i-1)*tstep);
             }
             spiking = 1;
         } else if (v[i] < neuron.vThres) spiking = 0;

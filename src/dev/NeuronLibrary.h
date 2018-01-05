@@ -9,10 +9,10 @@ typedef struct NeuronLibrary
 
     double  ****EPSP,   ***EPSP0,  ****IPSP,   ***IPSP0,
            *EPSP_ptr, *EPSP0_ptr, *IPSP_ptr, *IPSP0_ptr,
-             ***kEE,    ***kEI,   ***kIE,    ***kII,
+             ****kEE,    ****kEI,   ****kIE,    ****kII,
            ******kV,
            *kEE_ptr,  *kEI_ptr, *kIE_ptr,  *kII_ptr,
-           *kV_ptr
+           *kV_ptr,
              *vRange,   *dtRange, *fE, *fI, dur, tstep,
              **vLeak, *vLeak_ptr;
     //double vReset, vThres;
@@ -83,25 +83,25 @@ typedef struct NeuronLibrary
         readArray(tmp,"kEE", dimSize, arraySize, pmat, file);
         kEE_ptr = new double[arraySize];
         memcpy((void *) kEE_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        pointer3d(kEE,kEE_ptr,dimSize);
+        pointer4d(kEE,kEE_ptr,dimSize);
         mxDestroyArray(tmp);
     
         readArray(tmp,"kEI", dimSize, arraySize, pmat, file);
         kEI_ptr = new double[arraySize];
         memcpy((void *) kEI_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        pointer3d(kEI,kEI_ptr,dimSize);
+        pointer4d(kEI,kEI_ptr,dimSize);
         mxDestroyArray(tmp);
     
         readArray(tmp,"kIE", dimSize, arraySize, pmat, file);
         kIE_ptr = new double[arraySize];
         memcpy((void *) kIE_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        pointer3d(kIE,kIE_ptr,dimSize);
+        pointer4d(kIE,kIE_ptr,dimSize);
         mxDestroyArray(tmp);
     
         readArray(tmp,"kII", dimSize, arraySize, pmat, file);
         kII_ptr = new double[arraySize];
         memcpy((void *) kII_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        pointer3d(kII,kII_ptr,dimSize);
+        pointer4d(kII,kII_ptr,dimSize);
         mxDestroyArray(tmp);
     
         readArray(tmp,"vleakage0", dimSize, arraySize, pmat, file);
@@ -174,11 +174,11 @@ typedef struct NeuronLibrary
     // clear mem
     void clearLib() {
         size dimSize[4];
-        dimSize[5] = nt
-        dimSize[4] = ndt
-        dimSize[3] = nE+nI
-        dimSize[2] = nE+nI
-        dimSize[1] = ndt
+        dimSize[5] = nt;
+        dimSize[4] = ndt;
+        dimSize[3] = nE+nI;
+        dimSize[2] = nE+nI;
+        dimSize[1] = ndt;
         dimSize[0] = nv;
         del6d(kV,dimSize);
         delete []kV_ptr;
@@ -204,15 +204,16 @@ typedef struct NeuronLibrary
         del3d(IPSP0,dimSize);
         delete []IPSP0_ptr;
 
-        dimSize[2] = nt;
+        dimSize[3] = nt;
+        dimSize[2] = ndt;
         dimSize[1] = ndt;
-        del3d(kEE,dimSize);
+        del4d(kEE,dimSize);
         delete []kEE_ptr;
-        del3d(kEI,dimSize);
+        del4d(kEI,dimSize);
         delete []kEI_ptr;
-        del3d(kIE,dimSize);
+        del4d(kIE,dimSize);
         delete []kIE_ptr;
-        del3d(kII,dimSize);
+        del4d(kII,dimSize);
         delete []kII_ptr;
         del2d(vLeak);
         delete []vLeak_ptr;

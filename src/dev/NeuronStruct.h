@@ -151,6 +151,7 @@ typedef struct NeuronStruct{
         inID.clear();
         tinC.clear();
         CinID.clear();
+        tsp.clear();
         Iready = false;
         Eready = false;
         status = true;

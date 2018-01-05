@@ -268,7 +268,7 @@ unsigned int RK4_HH_old(std::vector<double> &v, std::vector<double> &m, std::vec
     return spikeCount;
 }
 
-unsigned int RK4_IF(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, Neuron neuron, double *pairs, double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, bool cutoff, bool eif, double &tsp) {
+unsigned int RK4_IF(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, Neuron neuron, double *pairs, double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, bool cutoff, bool eif, std::vector<double> &tsp) {
     unsigned int i, spikeCount = 0;
     double fk[4], vThres, tstep2 = tstep/2;
     double gEr, gIr, gErmid, gIrmid, tstepsp, tstepsp2;
@@ -289,10 +289,10 @@ unsigned int RK4_IF(std::vector<double> &v, std::vector<double> &gE, std::vector
         if (v[i]> vThres) {
             spikeCount = spikeCount + 1;
             //tsp = findTspRK(vThres,v[i-1],v[i],fk[0],fk_IF(v[i],gE[i],gI[i],pairs,eif));
-            tsp = (vThres-v[i-1])/(v[i]-v[i-1])*tstep;
-            tstepsp = tstep-tsp;
+            tsp.push_back((vThres-v[i-1])/(v[i]-v[i-1])*tstep);
+            tstepsp = tstep-tsp.back();
             tstepsp2 = tstepsp/2;
-            getCond4t(gE[i-1],gI[i-1],hE[i-1],hI[i-1],gEr,gIr,gErmid,gIrmid,tinBin[i],fBin[i],tsp,(i-1)*tstep,tau_er,tau_ed,tau_ir,tau_id,tstep);
+            getCond4t(gE[i-1],gI[i-1],hE[i-1],hI[i-1],gEr,gIr,gErmid,gIrmid,tinBin[i],fBin[i],tsp.back(),(i-1)*tstep,tau_er,tau_ed,tau_ir,tau_id,tstep);
 
             fk[0] = fk_IF(               pairs[10],   gEr,   gIr,pairs,eif);
             fk[1] = fk_IF(pairs[10]+fk[0]*tstepsp2,gErmid,gIrmid,pairs,eif);
@@ -301,7 +301,7 @@ unsigned int RK4_IF(std::vector<double> &v, std::vector<double> &gE, std::vector
             v[i] = pairs[10] + tstepsp/6*(fk[0] + 2*(fk[1] + fk[2]) + fk[3]);
             if (v[i] > vThres) std::cout << "use smaller tstep" << std::endl;
             if (cutoff) {
-                tsp = (i-1) * tstep + tsp;
+                //tsp = (i-1) * tstep + tsp;
                 break;
             }
         }
@@ -309,7 +309,7 @@ unsigned int RK4_IF(std::vector<double> &v, std::vector<double> &gE, std::vector
     return spikeCount;
 }	
 
-unsigned int RK4_HH(std::vector<double> &v, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, Neuron neuron, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, double &tsp, bool insert, size vs, size &ve, size &is, double vStop){
+unsigned int RK4_HH(std::vector<double> &v, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, Neuron neuron, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, size nt, double tstep, std::vector<double> &tsp, bool insert, size vs, size &ve, size &is, double vStop){
     unsigned int i, j, spikeCount = 0;
     size vi, os, si = gE.size()-1;
     assert(gE.size() > 0);
@@ -360,15 +360,15 @@ unsigned int RK4_HH(std::vector<double> &v, std::vector<double> &m, std::vector<
             } 
         } else {
             if (v[vi]<=v[vi-1] && !spiked) {
-                tsp = (vi-1)*tstep;
-                std::cout << "spiked at " << tsp << std::endl;
+                tsp.push_back((vi-1)*tstep);
+                std::cout << "spiked at " << tsp.back() << std::endl;
                 spiked = true;   
             }
             if (v[vi] < neuron.vThres) spiking = false;
         }
         if (insert) {
             if (spiked) {
-                if (vi*tstep >= tsp + neuron.tref) {
+                if (vi*tstep >= tsp.back() + neuron.tref) {
                     ve = vi;
                     std::cout << "w/ spike " << v[vi] << std::endl;
                     return spikeCount;

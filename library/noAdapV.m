@@ -17,27 +17,27 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
     dtRange = [0,15,30,50,100,160];
     ndt = length(dtRange);
     idtCase = [1,round(ndt/2)];
-    if nargin < 11
+    if nargin < 13
         avoidSpike = false;
-        if nargin < 10
+        if nargin < 12
             fI = linspace(0.5,2.0,4) * 1e-5;
-            if nargin < 10
+            if nargin < 11
                 fE = linspace(0.125,0.5,4) * 1e-5;
-                if nargin < 9
+                if nargin < 10
                     v0 = -0.4:0.1:1.2;
-                    if nargin < 8
+                    if nargin < 9
                         npool = 1;
-                        if nargin < 7
+                        if nargin < 8
                             loadData = true;
-                            if nargin < 6
+                            if nargin < 7
                                 ppp = false;
-                                if nargin < 5
+                                if nargin < 6
                                     draw = false;
-                                    if nargin <4
+                                    if nargin <5
                                         picformat = '';
-                                        if nargin < 3
+                                        if nargin < 4
                                             model = 'HH';
-                                            if nargin < 2
+                                            if nargin < 3
                                                 pick = 1;
                                             end
                                         end

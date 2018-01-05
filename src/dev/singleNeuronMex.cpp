@@ -25,7 +25,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     unsigned int ith,i,j,k,nt;
     double *rE, *rI, run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir, rEt, rIt;
     double gNa, vNa, gK, vK, gLeak, vLeak, vT, vinit, vE, vI, vRest, DeltaT, S;
-    double tsp_sim, tsp_bi, tsp_li, tref;
+    vector<double> tsp_sim, tsp_bi, tsp_li;
+    double tref;
     MATFile *matFile;
     NeuroLib neuroLib;
     Neuron neuron;
@@ -132,11 +133,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     //tmp = new mxArray*[rEl];
     plhs[2] = mxCreateCellMatrix(rEl,1);
     plhs[3] = mxCreateCellMatrix(rEl,1);
+    plhs[4] = mxCreateCellMatrix(rEl,1);
     unsigned int nc;
     double rHH = 1.3;
     double rLinear = 0.7;
+    double rBilinear = rLinear;
     double vCrossl = vRest + (vT -vRest)*rLinear;
     double vBackl = vRest + (vT -vRest)*rLinear;
+    double vCrossb = vRest + (vT -vRest)*rBilinear;
+    double vBackb = vRest + (vT -vRest)*rBilinear;
     cout << " linear -> HH  " << vCrossl << endl;
     cout << " HH -> linear " << vBackl << endl;
     size plchldr_size0,plchldr_size1;
@@ -270,9 +275,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         *(output + k*6 + 0) = cpu_t_sim;
         *(output + k*6 + 1) = cpu_t_bilinear;
         *(output + k*6 + 2) = cpu_t_linear;
-        *(output + k*6 + 3) = tsp_sim;
-        *(output + k*6 + 4) = tsp_bi;
-        *(output + k*6 + 5) = tsp_li;
+        *(output + k*6 + 3) = tsp_sim.size();
+        *(output + k*6 + 4) = tsp_bi.size();
+        *(output + k*6 + 5) = tsp_li.size();
 
         outputArray[0] = &(simV);
         outputArray[1] = &(biV);
@@ -305,6 +310,31 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         }
         mxSetCell(plhs[3], (mwIndex) k, mxDuplicateArray(tmp));
         mxDestroyArray(tmp);
+
+        tmp = mxCreateDoubleMatrix(tsp_sim.size(),1,mxREAL);
+        double *tsp = mxGetPr(tmp);
+        for (i=0; i<tsp_sim.size(); i++) {
+            *(tsp+i) = tsp_sim[i];
+        }
+        mxSetCell(plhs[4], (mwIndex) 3*k, mxDuplicateArray(tmp));
+        mxDestroyArray(tmp);
+
+        tmp = mxCreateDoubleMatrix(tsp_bi.size(),1,mxREAL);
+        tsp = mxGetPr(tmp);
+        for (i=0; i<tsp_bi.size(); i++) {
+            *(tsp+i) = tsp_bi[i];
+        }
+        mxSetCell(plhs[4], (mwIndex) 3*k+1, mxDuplicateArray(tmp));
+        mxDestroyArray(tmp);
+
+        tmp = mxCreateDoubleMatrix(tsp_li.size(),1,mxREAL);
+        tsp = mxGetPr(tmp);
+        for (i=0; i<tsp_li.size(); i++) {
+            *(tsp+i) = tsp_li[i];
+        }
+        mxSetCell(plhs[4], (mwIndex) 3*k+2, mxDuplicateArray(tmp));
+        mxDestroyArray(tmp);
+
         neuron.clear();
     
         gE.clear();

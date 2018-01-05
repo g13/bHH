@@ -13,8 +13,8 @@ switch iModel
         model = 'IF';
 end
 libfile = ['../../library/',type,'-',theme,'-',model,'-',num2str(ith),'th.mat'];
-parafile = ['../../library/parameters-',type,'-',theme,'-noAdap-',model,'.mat'];
-cutoff = true;
+parafile = ['../../library/parameters-',type,'-noAdap-',model,'.mat'];
+cutoff = false;
 rk = 4; % 2,4
 run_t = 1000;
 ignore_t = 10;
@@ -41,7 +41,7 @@ vinit = vRange(2);
 afterSpikeBehavior = 2;
 spikeShape = true;
 kVStyle = false;
-[cpuTimeAndTsp,outputMats,extIns,inIDs] = ...
+[cpuTimeAndTsp,outputMats,extIns,inIDs,tspCell] = ...
     singleNeuronMex(libfile,parafile,ith,rE,rI,iModel,run_t,ignore_t,vinit,rk,cutoff,seed,tref,afterSpikeBehavior,spikeShape,kVStyle);
 [printDriver,dpi,pos0,picformat] = picStd(picformat);
 FontSize = 16;
@@ -50,13 +50,16 @@ set(0,'DefaultTextFontSize',FontSize-2);
 fStr = [fE,fI];
 t = 0:tstep:run_t;
 cpuTime = cpuTimeAndTsp(1:3,:);
-tsp = cpuTimeAndTsp(4:6,:);
+tspSize = cpuTimeAndTsp(4:6,:);
 err = zeros(rEl,2,2);
 %
 for j=1:rEl
     outputMat = outputMats(:,:,j);
     extIn = extIns{j};
     tID = inIDs{j};
+    tsp_sim = tsp{j};
+    tsp_bi = tsp{j+1};
+    tsp_li = tsp{j+2};
     simV = outputMat(:,1);
     biV  = outputMat(:,2);
     liV  = outputMat(:,3);

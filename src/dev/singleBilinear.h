@@ -60,16 +60,16 @@ inline void interpkV(std::vector<double> &v, size vs, double ******kV, int iSyn,
     size idt0,jdt0;
     size idt1,jdt1;
     size iv, jv;
-    double rv, rdt, rf, base;
+    double rv, rdt, rf, rdt0, rdt1, base;
     getNear(vRange,nv,vTar,rv,iv,jv);
     getNear(idtRange,ndt,dtTar0,rdt,idt,jdt);
     double dtTar = dtTar1 - dtTar0;
+    size iidt = idtRange[idt];
+    size jjdt = idtRange[jdt];
     if (dtTar == 0) {
-        size iidt = idtRange[idt];
-        size jjdt = jdtRange[jdt];
         for (size i=0;i<tl;i++) {
             base = kV[iv][idt][iSyn][jSyn][0][iidt+i];
-            tmpK[i] = base + rv*(kV[jv][idt][iSyn][jSyn][0][iidt+i]-base) + rdt*(kV[iv][jdt][iSyn][jSyn][0][jjdt+i]-base);
+            tmpkV[i] = base + rv*(kV[jv][idt][iSyn][jSyn][0][iidt+i]-base) + rdt*(kV[iv][jdt][iSyn][jSyn][0][jjdt+i]-base);
         }
     } else {
         getNear(idtRange,ndt,idtRange[idt] + dtTar,rdt0,idt0,jdt0);
@@ -83,10 +83,10 @@ inline void interpkV(std::vector<double> &v, size vs, double ******kV, int iSyn,
             base = base0 + rdt0*(kV[iv][idt][iSyn][jSyn][jdt0][jjdt0+i] - base0);
             
             double dv0 = kV[jv][idt][iSyn][jSyn][idt0][iidt0+i];
-            dv = dv0 + rdt0*(kV[jv][idt][iSyn][jSyn][jdt0][jjdt0+i] - dv0);
+            double dv = dv0 + rdt0*(kV[jv][idt][iSyn][jSyn][jdt0][jjdt0+i] - dv0);
 
             double dt0 = kV[iv][jdt][iSyn][jSyn][idt1][iidt1+i];
-            dt = dt0 + rdt1*(kV[iv][jdt][iSyn][jSyn][jdt1][jjdt1+i] - dt0);
+            double dt = dt0 + rdt1*(kV[iv][jdt][iSyn][jSyn][jdt1][jjdt1+i] - dt0);
 
             tmpkV[i] = base + rv*(dv-base) + rdt*(dt-base);
         }
@@ -109,17 +109,17 @@ inline void interpK(std::vector<double> &v, size vs, double ****k, double ****PS
     size idt0,jdt0;
     size idt1,jdt1;
     size iv, jv;
-    double rv, rdt, rf, base;
+    double rv, rdt, rdt0, rdt1, rf, base;
     getNear(vRange,nv,vTar,rv,iv,jv);
     getNear(idtRange,ndt,dtTar0,rdt,idt,jdt);
     getNear(fRange,nf,fTar,rf,fi,fj);
     double dtTar = dtTar1 - dtTar0;
+    size iidt = idtRange[idt];
+    size jjdt = idtRange[jdt];
     if (dtTar == 0) {
-        size iidt = idtRange[idt];
-        size jjdt = jdtRange[jdt];
         for (size i=0;i<tl;i++) {
-            base = k[iv][idt][iidt+i];
-            tmpK[i] = base + rv*(kV[jv][idt][0][iidt+i]-base) + rdt*(kV[iv][jdt][0][jjdt+i]-base);
+            base = k[iv][idt][0][iidt+i];
+            tmpK[i] = base + rv*(k[jv][idt][0][iidt+i]-base) + rdt*(k[iv][jdt][0][jjdt+i]-base);
         }
     } else {
         getNear(idtRange,ndt,idtRange[idt] + dtTar,rdt0,idt0,jdt0);
@@ -133,10 +133,10 @@ inline void interpK(std::vector<double> &v, size vs, double ****k, double ****PS
             base = base0 + rdt0*(k[iv][idt][jdt0][jjdt0+i] - base0);
             
             double dv0 = k[jv][idt][idt0][iidt0+i];
-            dv = dv0 + rdt0*(k[jv][idt][jdt0][jjdt0+i] - dv0);
+            double dv = dv0 + rdt0*(k[jv][idt][jdt0][jjdt0+i] - dv0);
 
             double dt0 = k[iv][jdt][idt1][iidt1+i];
-            dt = dt0 + rdt1*(k[iv][jdt][jdt1][jjdt1+i] - dt0);
+            double dt = dt0 + rdt1*(k[iv][jdt][jdt1][jjdt1+i] - dt0);
 
             tmpK[i] = base + rv*(dv-base) + rdt*(dt-base);
         }
@@ -190,7 +190,7 @@ inline void interpVinit(std::vector<double> &v, size vs,  double **vLeak, double
     } else for (k=0;k<tl;k++)
             v[vs+k] = vLeak[i][ts+k] + r*(vLeak[j][ts+k]-vLeak[i][ts+k]);
 }
-bool nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, size vs, size nt, double tstep, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double &tsp, double vinit, size &ve, size &ith, int rk, double vBack) {
+bool nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, size vs, size nt, double tstep, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, std::vector<double> &tsp, double vinit, size &ve, size &ith, int rk, double vBack) {
     double conE = 1./(tau_er-tau_ed);
     double conI = 1./(tau_ir-tau_id);
     size i,j;
@@ -219,24 +219,23 @@ bool nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double> &v, std
     n.push_back(n_inf(vinit,vT));
     h.push_back(h_inf(vinit,vT));
     //if (rk==2)
+    double tsp0;
     if (rk==4)
         ith++;
         nc = RK4_HH(v,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp,true,vs,ve,ith,vBack);
         ith--;
     if (nc) {
-        assert(nc == 1);
         return true;
     } 
     else return false;
 }
 
-unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, double &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int rk, int afterSpikeBehavior, bool spikeShape, bool kVStyle){
+unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int rk, int afterSpikeBehavior, bool spikeShape, bool kVStyle){
     std::string kType1, kType2, kType;
     double f1, f2, vTarget, dtTarget, tshift, shift;
-    size ts, tl, vs, ve, i, j, k, i_b = 0;
+    size ts, tl, vs, ve, vc, i, j, k, i_b = 0;
     size nE = neuroLib.nE, nI = neuroLib.nI, nv = neuroLib.nv, ndt = neuroLib.ndt;
     double tstep = neuroLib.tstep;
-    size t1 = neuroLib.l0;
     size nt0 = neuroLib.nt0;
     size l0 = nt0 - 1;
     size t0 = l0 * tstep;
@@ -249,7 +248,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
     size lb = static_cast<size>(tb/tstep);
     size nb = lb + 1;
 
-    size run_lt = static_cast<size>(run_t/step);
+    size run_lt = static_cast<size>(run_t/tstep);
     size run_nt = run_lt + 1;
 
     bool crossed;
@@ -262,7 +261,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
     double *currentPSP = new double[nt0];
 
     double vinit = v[0];
-    v.assign(runt_nt, neuron.vReset);
+    v.assign(run_nt, neuron.vReset);
     if (l0 > run_lt) {
         tl = run_nt;
     } else {
@@ -283,7 +282,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
             if (vs+l0 > run_lt) {
                 tl = run_nt - vs;
             } else {
-                tl = nt0
+                tl = nt0;
             }
 
             if (f2 > 0) {
@@ -323,34 +322,35 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                     kType = kType1 + kType2;
                     switch (std::stoi(kType,nullptr,10)) {
                         case 11: //EE
-                            interpK(v, vs, neuroLib.kVEE, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, dtTarget, f1, shift, tl, tmpK, tmpPSP);
+                            interpK(v, vs, neuroLib.kEE, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, dtTarget, f1, shift, tl, tmpK, tmpPSP);
                             break;
                         case 10: //EI
-                            interpK(v, vs, neuroLib.kVEI, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nI, vTarget, dtTarget, dtTarget, f1, shift, tl, tmpK, tmpPSP);
+                            interpK(v, vs, neuroLib.kEI, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nI, vTarget, dtTarget, dtTarget, f1, shift, tl, tmpK, tmpPSP);
                             break;
                         case 1:  //IE
-                            interpK(v, vs, neuroLib.kVIE, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nE, vTarget, dtTarget, dtTarget, -f1, shift, tl, tmpK, tmpPSP);
+                            interpK(v, vs, neuroLib.kIE, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nE, vTarget, dtTarget, dtTarget, -f1, shift, tl, tmpK, tmpPSP);
                             break;
                         case 0:  //II
-                            interpK(v, vs, neuroLib.kVII, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nI, vTarget, dtTarget, dtTarget, -f1, shift, tl, tmpK, tmpPSP);
+                            interpK(v, vs, neuroLib.kII, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nI, vTarget, dtTarget, dtTarget, -f1, shift, tl, tmpK, tmpPSP);
                             break;
                     }
                 } else {
-                    interpkV(v, vs, neuroLib.kV, neuroLib.vRange, neuroLib.idtRange, nv, ndt, vTarget, dtTarget, dtTarget, shift, tl, tmpK);
+                    interpkV(v, vs, neuroLib.kV, neuron.inID[j], neuron.inID[i], neuroLib.vRange, neuroLib.idtRange, nv, ndt, vTarget, dtTarget, dtTarget, shift, tl, tmpK);
                     
                 }
             } 
             //check spike 
             crossed = false;
-            ith = i;
+            size ith = i;
             for (k=vs;k<vc;k++) {
+                int spiked = 0;
                 while (v[k] > vCross) {
                     crossed = true;
                     ncross = ncross +1;
                     // come in and out in multiples of tstep 
                     std::cout << "crossed at " << k*tstep << ", start ith " << ith << std::endl;
                     if (spikeShape) {
-                        spiked = nearThretyleshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, nt+1, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, rk, vBack);
+                        spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, nt+1, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, rk, vBack);
                         cross.push_back(gE.size());
                     } else {
                         size ith_old = ith; 
@@ -369,8 +369,8 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                                 break;
                             }
                         }
-                        v[vs] = neuron.vRest;
-                        for (ith = ith_old; ith < nin; ith++) {
+                        v[vs] = neuron.vReset;
+                        for (ith = ith_old; ith < neuron.tin.size(); ith++) {
                             if (neuron.tin[ith] > vs*tstep) {
                                 break;                
                             }
@@ -382,7 +382,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                     std::cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << std::endl;
                     if (spiked){
                         spikeCount = spikeCount + 1;
-                        neuron.tsp.push_back(tsp);
+                        neuron.tsp.push_back(tsp.back());
                     } 
                     if (vs + nt0 <= nt) {
                         tl = nt0;
@@ -391,7 +391,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                     }
 
                     for (j=1; j<tl;j++) {
-                        v[vs+j] = neuron.vRest;
+                        v[vs+j] = neuron.vReset;
                     }
 
                     interpVinit(v,vs,neuroLib.vLeak,neuroLib.vRange,nv,v[vs],1,0,tl,tmp);
@@ -401,7 +401,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
 
                         for (i=ith+1;i>0; i--) {
                             j = i-1;
-                            it = round(neuron.tin[j]/tstep);
+                            size it = round(neuron.tin[j]/tstep);
                             dtTarget = vs - it;
                             if ( l1<= dtTarget) {
                                 break;
@@ -411,20 +411,20 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                             else tl = static_cast<size>(ceil(nt - dtTarget))+1;
                             f2 = neuron.fStrength[neuron.inID[j]];
                             if (f2 > 0) {
-                                interpPSP(v,vs, neuroLib.EPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, f, 1,0,tl,currentPSP);
+                                interpPSP(v,vs, neuroLib.EPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, f2, 1,0,tl,currentPSP);
                                 kType2 = "1";
                             } else {
-                                interpPSP(v,vs, neuroLib.IPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nI, vTarget, dtTarget,-f, 1,0,tl,currentPSP);
+                                interpPSP(v,vs, neuroLib.IPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nI, vTarget, dtTarget,-f2, 1,0,tl,currentPSP);
                                 kType2 = "0";
                             }
                             if (afterSpikeBehavior == 2) {
                                 i_b = 0;
-                                cout << " adding afterspike bPSP " << endl;
+                                std::cout << " adding afterspike bPSP " << std::endl;
                                 for (k=i; k>0; k--) {
                                     j = k-1; // prevent negative for unsigned int iteration number. 
-                                    jt = neuron.tin[j]/tstep;
+                                    size jt = neuron.tin[j]/tstep;
                                     dtTarget = it - jt;
-                                    dtTarget1 = vs - jt;
+                                    double dtTarget1 = vs - jt;
                                     if (dtTarget > lb) {
                                         break;
                                     } 
@@ -441,21 +441,21 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                                         kType = kType1 + kType2;
                                         switch (std::stoi(kType,nullptr,10)) {
                                             case 11: //EE
-                                                interpK(v, vs, neuroLib.kVEE, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, dtTarget1, f1, shift, tl, tmpK, tmpPSP);
+                                                interpK(v, vs, neuroLib.kEE, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, dtTarget1, f1, shift, tl, tmpK, tmpPSP);
                                                 break;
                                             case 10: //EI
-                                                interpK(v, vs, neuroLib.kVEI, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nI, vTarget, dtTarget, dtTarget1, f1, shift, tl, tmpK, tmpPSP);
+                                                interpK(v, vs, neuroLib.kEI, neuroLib.EPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nI, vTarget, dtTarget, dtTarget1, f1, shift, tl, tmpK, tmpPSP);
                                                 break;
                                             case 1:  //IE
-                                                interpK(v, vs, neuroLib.kVIE, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nE, vTarget, dtTarget, dtTarget1, -f1, shift, tl, tmpK, tmpPSP);
+                                                interpK(v, vs, neuroLib.kIE, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nE, vTarget, dtTarget, dtTarget1, -f1, shift, tl, tmpK, tmpPSP);
                                                 break;
                                             case 0:  //II
-                                                interpK(v, vs, neuroLib.kVII, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nI, vTarget, dtTarget, dtTarget1, -f1, shift, tl, tmpK, tmpPSP);
+                                                interpK(v, vs, neuroLib.kII, neuroLib.IPSP, currentPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fI, nv, ndt, nI, vTarget, dtTarget, dtTarget1, -f1, shift, tl, tmpK, tmpPSP);
                                                 break;
                                         }
 
                                     } else {
-                                        interpkV(v, vs, neuroLib.kV, neuroLib.vRange, neuroLib.idtRange, nv, ndt, vTarget, dtTarget, dtTarget1, shift, tl, tmpK);
+                                        interpkV(v, vs, neuroLib.kV, neuron.inID[j], neuron.inID[i], neuroLib.vRange, neuroLib.idtRange, nv, ndt, vTarget, dtTarget, dtTarget1, shift, tl, tmpK);
                                     }
                                 } 
                             }
@@ -479,7 +479,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                             }
                         }
                     } else {
-                        cout << " no readjust input, only leakage" << endl;
+                        std::cout << " no readjust input, only leakage" << std::endl;
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
                         }
@@ -488,10 +488,11 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                 }
                 if (crossed) {
                     i = ith;
-                    cout << " last input during cross " << i << endl;
+                    std::cout << " last input during cross " << i << std::endl;
                     break;
                 }
             }
+            vs = ve;
         }
     }
     delete []tmp;
@@ -501,12 +502,11 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
     return spikeCount;
 }
 
-unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, double &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int rk, int afterSpikeBehavior, bool spikeShape){
+unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int rk, int afterSpikeBehavior, bool spikeShape){
     double f, vTarget, dtTarget, tshift, shift;
-    size ts, tl, vs, ve, i, j, k, i_b = 0;
+    size ts, tl, vs, ve, vc, i, j, k, i_b = 0;
     size nE = neuroLib.nE, nI = neuroLib.nI, nv = neuroLib.nv, ndt = neuroLib.ndt;
     double tstep = neuroLib.tstep;
-    size t1 = neuroLib.l0;
     size nt0 = neuroLib.nt0;
     size l0 = nt0 - 1;
     size t0 = l0 * tstep;
@@ -519,7 +519,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
     size lb = static_cast<size>(tb/tstep);
     size nb = lb + 1;
 
-    size run_lt = static_cast<size>(run_t/step);
+    size run_lt = static_cast<size>(run_t/tstep);
     size run_nt = run_lt + 1;
 
     bool crossed;
@@ -532,7 +532,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
     double *currentPSP = new double[nt0];
 
     double vinit = v[0];
-    v.assign(runt_nt, neuron.vReset);
+    v.assign(run_nt, neuron.vReset);
     if (l0 > run_lt) {
         tl = run_nt;
     } else {
@@ -553,7 +553,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
             if (vs+l0 > run_lt) {
                 tl = run_nt - vs;
             } else {
-                tl = nt0
+                tl = nt0;
             }
 
             if (f > 0) {
@@ -574,15 +574,16 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
             }
             //check spike 
             crossed = false;
-            ith = i;
+            size ith = i;
             for (k=vs;k<vc;k++) {
+                int spiked = 0;
                 while (v[k] > vCross) {
                     crossed = true;
                     ncross = ncross +1;
                     // come in and out in multiples of tstep 
                     std::cout << "crossed at " << k*tstep << ", start ith " << ith << std::endl;
                     if (spikeShape) {
-                        spiked = nearThretyleshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, nt+1, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, rk, vBack);
+                        spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, nt+1, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, rk, vBack);
                         cross.push_back(gE.size());
                     } else {
                         size ith_old = ith; 
@@ -601,8 +602,8 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                                 break;
                             }
                         }
-                        v[vs] = neuron.vRest;
-                        for (ith = ith_old; ith < nin; ith++) {
+                        v[vs] = neuron.vReset;
+                        for (ith = ith_old; ith < neuron.tin.size(); ith++) {
                             if (neuron.tin[ith] > vs*tstep) {
                                 break;                
                             }
@@ -614,7 +615,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     std::cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << std::endl;
                     if (spiked){
                         spikeCount = spikeCount + 1;
-                        neuron.tsp.push_back(tsp);
+                        neuron.tsp.push_back(tsp.back());
                     } 
                     if (vs + nt0 <= nt) {
                         tl = nt0;
@@ -623,7 +624,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     }
 
                     for (j=1; j<tl;j++) {
-                        v[vs+j] = neuron.vRest;
+                        v[vs+j] = neuron.vReset;
                     }
 
                     interpVinit(v,vs,neuroLib.vLeak,neuroLib.vRange,nv,v[vs],1,0,tl,tmp);
@@ -633,7 +634,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
 
                         for (i=ith+1;i>0; i--) {
                             j = i-1;
-                            it = round(neuron.tin[j]/tstep);
+                            size it = round(neuron.tin[j]/tstep);
                             dtTarget = vs - it;
                             if ( l1<= dtTarget) {
                                 break;
@@ -667,7 +668,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                             }
                         }
                     } else {
-                        cout << " no readjust input, only leakage" << endl;
+                        std::cout << " no readjust input, only leakage" << std::endl;
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
                         }
@@ -676,10 +677,11 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                 }
                 if (crossed) {
                     i = ith;
-                    cout << " last input during cross " << i << endl;
+                    std::cout << " last input during cross " << i << std::endl;
                     break;
                 }
             }
+            vs = ve;
         }
     }
     delete []tmp;

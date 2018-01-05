@@ -17,25 +17,25 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
-    if nargin < 10
+    if nargin < 12
         fI = linspace(0.5,2.0,4) * 1e-5;
-        if nargin < 10
+        if nargin < 11
             fE = linspace(0.125,0.5,4) * 1e-5;
-            if nargin < 9
+            if nargin < 10
                 v0 = -0.4:0.1:1.2;
-                if nargin < 8
+                if nargin < 9
                     npool = 1;
-                    if nargin < 7
+                    if nargin < 8
                         loadData = true;
-                        if nargin < 6
+                        if nargin < 7
                             ppp = false;
-                            if nargin < 5
+                            if nargin < 6
                                 draw = false;
-                                if nargin <4
+                                if nargin < 5
                                     picformat = '';
-                                    if nargin < 3
+                                    if nargin < 4
                                         model = 'HH';
-                                        if nargin < 2
+                                        if nargin < 3
                                             pick = 1;
                                         end
                                     end
@@ -79,7 +79,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             disp('model not implemented');
             return
     end
-    pname = ['../library/parameters-',name,'-',theme,'-noAdap','-',model];
+    pname = ['../library/parameters-',name,'-noAdap-',model];
     disp(name);
     load([pname]);
     i = pick;
@@ -96,8 +96,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     testII = true;
     testEI = true;
     testIE = true;
-    singleStored = false;
-    %singleStored = true;
+    %singleStored = false;
+    singleStored = true;
 %    multipleInput = false;
     multipleInput = true;
 %    simpleTest = true;
@@ -1152,10 +1152,10 @@ function [kV,k,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,
            v2V(range,dtOI,iv0) = [sPSP2(1:dtl,:,iv0)]';
        end
        vaddV(:,dtOI,iv0) = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
+       %parfor it = iidt:nt
        parfor it = iidt:nt
-       %for it = 1:nt
            [k(it,1,iv0),pV(:,it,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vDoubletV(it,:,iv0)');
-           kV(it,1,:,:,iv0) = reshape(vDoubletV(it,:,iv0)-v2V(:,it,iv0),[n2,n1]);
+           kV(it,1,:,:,iv0) = reshape(vDoubletV(it,:,iv0)'-v2V(:,it,iv0),[n2,n1]);
        end
     end
 
@@ -1212,7 +1212,7 @@ function [kV,k,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,
             parfor it = kkdt:nt
             %for it = 1:nt
                 [k(it,jdt,iv0),~] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vtmp(it,:,iv0)');
-                kV(it,jdt,:,:,iv0) = reshape(vtmp(it,:,iv0)-v2V(:,it,iv0),[n2,n1]);
+                kV(it,jdt,:,:,iv0) = reshape(vtmp(it,:,iv0)'-v2V(:,it,iv0),[n2,n1]);
             end
         end
     end

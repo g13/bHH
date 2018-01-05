@@ -1,4 +1,4 @@
-function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
+function paraNoAdap(model,name,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
     if nargin < 9
         noAdap = true;
         if nargin < 8
@@ -133,9 +133,9 @@ function paraNoAdap(model,name,theme,tau_er,tau_ed,tau_ir,tau_id,draw,noAdap)
                 select = find(abs(dataSet(:,1) - 87.5) < 1e-15 & dataSet(:,12) == 5 & dataSet(:,13) == 1 & dataSet(:,14) == 2);
         end
     if noAdap
-        fname = [name,'-',theme,'-noAdap-',model];
+        fname = [name,'-noAdap-',model];
     else
-        fname = [name,'-',theme,'-',model];
+        fname = [name,'-',model];
     end
     para.select = select;
     
