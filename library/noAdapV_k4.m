@@ -99,7 +99,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     testII = true;
     testEI = true;
     testIE = true;
-    %singleStored = false;
 %    multipleInput = false;
     multipleInput = true;
 %    simpleTest = true;
