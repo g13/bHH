@@ -561,7 +561,7 @@ function [sEPSP,sIPSP,t] = noAdapV(theme,name,pick,model,picformat,draw,ppp,load
         poinumber = false;
         poiend = false;
         idtRange = round(dtRange/tstep)+1;
-        durpsp = l0-ignore;
+        durpsp = dur-ignore;
 %         seed = 122435;
         rng(seed);
         l0 = round(durpsp/tstep);

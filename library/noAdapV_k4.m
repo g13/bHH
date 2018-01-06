@@ -88,7 +88,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     ei = para.ei(i);
     dir = [name,'-',theme,'-',model];
     name = dir;
-    if exist(['.\',dir])~=7
+    if exist(['./',dir])~=7
         mkdir(dir);
     else
         rmdir(dir,'s');
@@ -154,8 +154,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     nt0 = round(dur0/tstep)+1;
     % 1 2 3
     % E I EI
-    diri = ['./',dir,'/',num2str(i)];
-    if ~exist(diri,'dir')
+    diri = [dir,'/',num2str(i)];
+    if ~exist(['./',diri],'dir')
         mkdir(diri);
     else
         rmdir(diri,'s');
@@ -411,7 +411,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         poinumber = false;
         poiend = false;
         idtRange = round(dtRange/tstep)+1;
-        durpsp = l0-ignore;
+        durpsp = dur-ignore;
 %         seed = 122435;
         rng(seed);
         l0 = round(durpsp/tstep);
