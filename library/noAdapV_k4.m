@@ -10,10 +10,9 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     set(0,'DefaultAxesFontSize',FontSize);
     set(0,'DefaultTextFontSize',FontSize-2);
     tstep = 1/32;
-    l0 = 220; % estimating length
     dur = 300; % bilinear k length
     dur0 = 300; % linear length
-    dtRange = [0:2:12,15:5:30,50,70,110,150,190,270];
+    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
@@ -89,7 +88,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     ei = para.ei(i);
     dir = [name,'-',theme,'-',model];
     name = dir;
-    if ~exist(dir,'dir')
+    if exist(['.\',dir])~=7
         mkdir(dir);
     else
         rmdir(dir,'s');
@@ -106,8 +105,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     test = false;
 %    test = true;
     assert(dtRange(ndt)<dur);
-    for idt=1:ndt
-        assert((dur - dtRange(ndt)-dtRange(ndt-1))<=(dur-dtRange(ndt)));
+    for idt=2:ndt
+        assert((dur - dtRange(idt))>=(dtRange(ndt-1)-dtRange(idt-1)));
     end
     %idtCase = [1,round(ndt/2),ndt-1];
     ndtplot = length(idtCase);
@@ -155,7 +154,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     nt0 = round(dur0/tstep)+1;
     % 1 2 3
     % E I EI
-    diri = [dir,'/',num2str(i)];
+    diri = ['./',dir,'/',num2str(i)];
     if ~exist(diri,'dir')
         mkdir(diri);
     else
@@ -388,7 +387,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
         toc;
         disp('kV generated');
-        save(['../library/',name,'-',num2str(i),'th'],'kV','kEE','kIE','kEI','kII','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','ndt','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','l0','tstep','dir','nt0','E_tmax','I_tmax');
+        save(['../library/',name,'-',num2str(i),'th'],'kV','kEE','kIE','kEI','kII','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','ndt','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','tstep','dir','nt0','E_tmax','I_tmax');
         if draw
             assert(idtplot==ndtplot);
         end
