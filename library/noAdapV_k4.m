@@ -137,13 +137,13 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             else
                 parpool(npool);
             end
+            poolobj = gcp('nocreate');
+            disp(poolobj.NumWorkers);
+            feature('numcores');
         end
     else
         delete(gcp('nocreate'));
     end
-    poolobj = gcp('nocreate');
-    disp(poolobj.NumWorkers);
-    feature('numcores');
     assert(nv0>1);
     nE = length(fE);
     nI = length(fI);
@@ -411,7 +411,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         poinumber = false;
         poiend = false;
         idtRange = round(dtRange/tstep)+1;
-        durpsp = dur-ignore;
+        durpsp = dtRange(ndt)-ignore;
 %         seed = 122435;
         rng(seed);
         l0 = round(durpsp/tstep);
