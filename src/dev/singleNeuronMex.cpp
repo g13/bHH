@@ -28,7 +28,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
     struct timespec tpS, tpE;
     unsigned int ith,i,j,k,nt;
-    double *rE, *rI, run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir, rEt, rIt;
+    double *rE, *rI, run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir;
     double gNa, vNa, gK, vK, gLeak, vLeak, vT, vinit, vE, vI, vRest, DeltaT, S;
     vector<double> tsp_sim, tsp_bi, tsp_li;
     double tref;
@@ -144,7 +144,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     plhs[2] = mxCreateCellMatrix(rEl,1);
     plhs[3] = mxCreateCellMatrix(rEl,1);
     plhs[4] = mxCreateCellMatrix(rEl*3,1);
-    unsigned int nc;
     double rHH = 1.0;
     double rLinear = 0.8;
     double rBilinear = rLinear;
@@ -160,6 +159,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     cout << "initial voltage " << vinit << endl;  
     for (k=0;k<rEl;k++) {
         cout << "============== " << k+1 << " ==============" << endl;
+        nt = static_cast<unsigned int>(run_t/tstep)+1;
         simV.assign(nt,vinit);
         biV.assign(nt,vinit);
         liV.assign(nt,vinit);
@@ -187,8 +187,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         hEl.reserve(nt);
         hIl.reserve(nt);
         // get external inputs
-        rEt = rE[k]/1000;
-        rIt = rI[k]/1000; 
+        double rEt= rE[k]/1000;
+        double rIt= rI[k]/1000; 
+        if (rE == 0.0) neuron.extE = false;
+        if (rI == 0.0) neuron.extI = false;
         while (neuron.status) neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
 
         // sim
@@ -201,7 +203,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         m.push_back(m_inf(vinit,vT));
         n.push_back(n_inf(vinit,vT));
         h.push_back(h_inf(vinit,vT));
-        nc = 0;
+        unsigned int nc = 0;
         switch (model)
         {   
             case 0: //HH

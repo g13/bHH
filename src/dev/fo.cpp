@@ -28,7 +28,6 @@ namespace po = boost::program_options;
 int main(int argc, char **argv)
 {
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
-    // prhs[] ~ lib_file, para_file, ith, rE, rI, model, run_t, ignore_t, vinit
     ofstream tIncome_file, raster_file, data_file;
     ifstream cfg_file;
     string lib_file, para_file;
@@ -37,7 +36,7 @@ int main(int argc, char **argv)
     double rLinear;
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
     struct timespec tpS, tpE;
-    unsigned int ith,i,j,model,nt,rk;
+    unsigned int ith,i,j,nt;
     vector<double> rE, rI;
     double run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir;
     double gNa, vNa, gK, vK, gLeak, vLeak, vT, vE, vI, vRest, DeltaT,S;
@@ -53,7 +52,6 @@ int main(int argc, char **argv)
     vector<double> gEb, gEl, gIb, gIl, ml, nl, hl, mb, nb, hb;
     vector<double> hEb, hEl, hIb, hIl, hE, hI;
     vector<size> crossb, crossl;
-    bool cutoff;
 	unsigned int seed0 = static_cast<unsigned int>(std::time(NULL));
     unsigned int seed;
     string config_file;
@@ -72,11 +70,8 @@ int main(int argc, char **argv)
 		("ith,i", po::value<unsigned int>(&ith)->default_value(1), "i th neuron")
 		("rE", po::value<vector<double>>()->multitoken()->composing(), "Exc poisson rate")
 		("rI", po::value<vector<double>>()->multitoken()->composing(), "Inh poisson rate")
-		("model,m", po::value<unsigned int>(&model), "model 0-HH 1-EIF 2-IF")
 		("run_t,t", po::value<double>(&run_t), "sim time")
         ("vinit,v", po::value<unsigned int>(&vinit), "sim time")
-        ("rk,r",po::value<unsigned int>(&rk), "order of rk method")
-        ("cutoff",po::value<bool>(&cutoff), "terminate when spike")
         ("tref",po::value<double>(&tref),"refractory period")
         ("rLinear",po::value<double>(&rLinear),"linear->HH threshold")
 		("ignore_t", po::value<double>(&ignore_t), "ingore time while applying bilinear rules");
@@ -165,17 +160,15 @@ int main(int argc, char **argv)
         simV.assign(nt,neuroLib.vRange[vinit]);
         biV.assign(nt,neuroLib.vRange[vinit]);
         liV.assign(nt,neuroLib.vRange[vinit]);
-        if (model==0) {
-            m.reserve(nt);
-            n.reserve(nt);
-            h.reserve(nt);
-            ml.reserve(nt);
-            nl.reserve(nt);
-            hl.reserve(nt);
-            mb.reserve(nt);
-            nb.reserve(nt);
-            hb.reserve(nt);
-        }
+        m.reserve(nt);
+        n.reserve(nt);
+        h.reserve(nt);
+        ml.reserve(nt);
+        nl.reserve(nt);
+        hl.reserve(nt);
+        mb.reserve(nt);
+        nb.reserve(nt);
+        hb.reserve(nt);
         gE.reserve(nt);
         gI.reserve(nt);
         gEb.reserve(nt);
@@ -195,7 +188,7 @@ int main(int argc, char **argv)
         if (rI == 0.0) neuron.extI = false;
         while (neuron.status) neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
 
-        // sim
+        // HH sim 
         clock_gettime(clk_id,&tpS);
         neuron.vReset = vRest;
         gE.push_back(0);
@@ -206,88 +199,36 @@ int main(int argc, char **argv)
         n.push_back(n_inf(neuroLib.vRange[vinit],vT));
         h.push_back(h_inf(neuroLib.vRange[vinit],vT));
         unsigned int nc = 0;
-        switch (model)
-        {   
-            case 0: //HH
-                neuron.vThres = vRest + 2*(vT -vRest)*rHH;
-                cout << "HH " << endl;
-                if (rk==2)
-                    nc = RK2_HH(simV,m,n,h,gE,gI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim);
-                if (rk==4) {
-                    nc = RK4_HH(simV,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim,false,0,plchldr_size0,plchldr_size1,plchldr_double);
-                }
-                break;
-            case 1: //EIF
-                cout << "EIF " << endl;
-                neuron.vThres = vNa;
-                if (rk==2)
-                    nc = RK2_IF(simV,gE,gI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,cutoff,1,tsp_sim);
-                if (rk==4)
-                    nc = RK4_IF(simV,gE,gI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,cutoff,1,tsp_sim);
-                break;
-            case 2: //IF
-                cout << "IF " << endl;
-                neuron.vThres = vT;
-                if (rk==2)
-                    nc = RK2_IF(simV,gE,gI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,cutoff,0,tsp_sim);
-                if (rk==4)
-                    nc = RK4_IF(simV,gE,gI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,cutoff,0,tsp_sim);
-                break;
-        }
+        neuron.vThres = vRest + 2*(vT -vRest)*rHH;
+        cout << "HH start" << endl;
+        nc = RK4_HH(simV,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim,false,0,plchldr_size0,plchldr_size1,plchldr_double);
         clock_gettime(clk_id,&tpE);
         cpu_t_sim = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "sim ended, took " << cpu_t_sim << "s" << endl;
-        if (rk!=2 && rk!=4) cout << "rk2 or 4 only" << endl;
-        else {
-            cout << "spikes: " << nc << endl;
-            //cout << "spikes: " << nc1 << endl;
-        }
+        cout << "spikes: " << nc << endl;
 
         // bilinear
-        clock_gettime(clk_id,&tpS);
         nc = 0;
+        clock_gettime(clk_id,&tpS);
         cout << " bilinear start " << endl;
-        switch (model) {   
-            case 0: //HH
-                neuron.vThres = vRest + (vT -vRest)*rHH;
-                nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, rk, afterCrossBehavior, spikeShape, kVStyle);
-                break;
-            case 1: //EIF
-                neuron.vThres = vNa;
-                //bilinear_EIF();
-                break;
-            case 2: //IF
-                neuron.vThres = vT;
-                //bilinear_IF();
-                break;
-        }
+        neuron.vThres = vRest + (vT -vRest)*rHH;
+        nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
         clock_gettime(clk_id,&tpE);
         cpu_t_bilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "bilinear est. ended, took " << cpu_t_bilinear << "s" << endl;
         cout << "spikes: " << nc << endl;
         
         // linear 
+        nc = 0;
         cout << " linear start " << endl;
         clock_gettime(clk_id,&tpS);
-        nc = 0;
-        switch (model) {   
-            case 0: //HH
-                nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, rk, afterCrossBehavior, spikeShape);
-                break;
-            case 1: //EIF
-                neuron.vThres = vNa;
-                //bilinear_EIF();
-                break;
-            case 2: //IF
-                neuron.vThres = vT;
-                //bilinear_IF();
-                break;
-        } 
+        nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape);
         clock_gettime(clk_id,&tpE);
         cpu_t_linear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "linear est. ended, took " << cpu_t_linear << "s" << endl;
         cout << "spikes: " << nc << endl;
-        
+       
+        // data output
         writeTimeID(neuron.tin, neuron.inID tIncome_file);
         
         vector<double> outTsp;
@@ -300,14 +241,8 @@ int main(int argc, char **argv)
         outTsp.clear();
 
         vector<double>* output[8] = {&simV,&biV,&liV,&gE,&gI,&m,&n,&h};
-        switch (model) {
-            case 0:
-                for (i=0;i<8;i++)
-                    data_file.write((char*)&(output[i]->at(0)), nt*sizeof(double));
-                break;
-            default:
-                for (i=0;i<5;i++)
-                    data_file.write((char*)&(output[i]->at(0)), nt*sizeof(double));
+        for (i=0;i<8;i++) {
+            data_file.write((char*)&(output[i]->at(0)), nt*sizeof(double));
         }
         neuron.clear();
         tsp_sim.clear();
