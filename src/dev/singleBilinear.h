@@ -191,7 +191,7 @@ inline void interpVinit(std::vector<double> &v, size vs,  double **vLeak, double
     } else for (k=0;k<tl;k++)
             v[vs+k] = vLeak[i][ts+k] + r*(vLeak[j][ts+k]-vLeak[i][ts+k]);
 }
-unsigned int nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, size vs, size nt, double tstep, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, std::vector<double> &tsp, double vinit, size &ve, size &ith, int rk, double vBack) {
+unsigned int nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, size vs, size nt, double tstep, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, std::vector<double> &tsp, double vinit, size &ve, size &ith, double vBack) {
     double conE = 1./(tau_er-tau_ed);
     double conI = 1./(tau_ir-tau_id);
     size i,j;
@@ -219,14 +219,13 @@ unsigned int nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double>
     m.push_back(m_inf(vinit,vT));
     n.push_back(n_inf(vinit,vT));
     h.push_back(h_inf(vinit,vT));
-    //if (rk==2)
     ith++;
     nc = RK4_HH(v,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp,true,vs,ve,ith,vBack);
     ith--;
     return nc;
 }
 
-unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int rk, int afterCrossBehavior, bool spikeShape){
+unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int afterCrossBehavior, bool spikeShape){
     double f, vTarget, dtTarget, tshift, shift;
     size ts, tl, vs, ve, vc, i, j, k, i_b = 0;
     size nE = neuroLib.nE, nI = neuroLib.nI, nv = neuroLib.nv, ndt = neuroLib.ndt;
@@ -307,7 +306,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     // come in and out in multiples of tstep 
                     cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
                     if (spikeShape) {
-                        spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, run_nt, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, rk, vBack);
+                        spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, run_nt, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, vBack);
                         cross.push_back(gE.size());
                     } else {
                         size ith_old = ith; 
@@ -422,7 +421,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
     return spikeCount;
 }
 
-unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int rk, int afterCrossBehavior, bool spikeShape, bool kVStyle){
+unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int afterCrossBehavior, bool spikeShape, bool kVStyle){
     std::string kType1, kType2, kType;
     double f1, f2, vTarget, dtTarget, tshift, shift;
     size ts, tl, vs, ve, vc, i, j, k, i_b = 0;
@@ -542,7 +541,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                     // come in and out in multiples of tstep 
                     cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
                     if (spikeShape) {
-                        spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, run_nt, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, rk, vBack);
+                        spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, k, run_nt, tstep, pairs, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, vBack);
                         cross.push_back(gE.size());
                     } else {
                         size ith_old = ith; 
