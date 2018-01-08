@@ -4,7 +4,7 @@ theme = 'test';
 iModel = 0; % 0 for HH 1 for EIF 2 for IF
 type = 'RS_exc_Rat';
 ith = 1;
-tref = 7;
+tref = 5;
 switch iModel 
     case 0
         model = 'HH';
@@ -21,18 +21,18 @@ run_t = 1000;
 ignore_t = 10;
 % rE = [15,20,25,30,35,40,45]; % Hz
 % rI = [30,35,40,45,50,55,60];
-rE = [70];
-rI = [40];
+rE = [100,95,90,10];
+rI = [50,47.5,45,5];
 rEl = length(rE);
 assert(rEl==length(rI));
 seed = 13;
-load(libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kV','kEI','kIE','kEE','kII','fE','fI','nE','ndt','l0');
+load(libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kV','kEI','kIE','kEE','kII','fE','fI','nE','ndt');
 nt0 = size(sEPSP0,1)
 nt = size(kEI,1)
 ndt = size(kEI,2)
 nv = length(vRange)
 ndur = size(sEPSP,1)
-edur = l0 - ignore_t;
+edur = dtRange(ndt) - ignore_t;
 tstep = dur/(ndur-1)
 run_nt = round(run_t/tstep) + 1;
 vinit = vRange(2);
@@ -80,8 +80,8 @@ for j=1:rEl
     Iin = length(tI);
     figure;
     textFontSize = 8;
-    minV = min([min(simV),min(biV),min(liV)]);
-    maxV = min([-55,max([max(simV),max(biV),max(liV)])]);
+    minV = max([-80,min([min(simV),min(biV),min(liV)])]);
+    maxV = min([-40,max([max(simV),max(biV),max(liV)])]);
     subplot(2,1,1);
     hold on
     plot(t,[simV,biV,liV]);

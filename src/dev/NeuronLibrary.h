@@ -5,7 +5,7 @@
 
 typedef struct NeuronLibrary 
 {
-    size ndt,nt,nt0,nv,nE,nI,ith,l0;
+    size ndt,nt,nt0,nv,nE,nI,ith;
 
     double  ****EPSP,   ***EPSP0,  ****IPSP,   ***IPSP0,
            *EPSP_ptr, *EPSP0_ptr, *IPSP_ptr, *IPSP0_ptr,

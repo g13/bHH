@@ -56,6 +56,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     mwSize rEl = mxGetN(prhs[3]);
     mwSize rIl = mxGetN(prhs[4]);
+    cout << "rE size: " << rEl << endl;
+    cout << "rI size: " << rIl << endl;
     assert(rIl==rEl);
     rE = new double[rEl];
     memcpy((void *) rE, (void *)(mxGetPr(prhs[3])),rEl*sizeof(double));
@@ -121,20 +123,23 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     
     nt = static_cast<int>(run_t/tstep)+1;
     vector<double>* outputArray[8];
-    double *outTin, *outInID, *output;
+    double *outTin, *outInID, *output, *outputMat;
     
     plhs[0] = mxCreateDoubleMatrix(6, rEl, mxREAL);
+    output = mxGetPr(plhs[0]);
     int fiveOrEight;
-    if (model == 0)
+    if (model == 0) {
         fiveOrEight = 8;
-    else 
+    } else {
         fiveOrEight = 5;
+    }
 
     mwSize dims[3];
     dims[0] = nt;
     dims[1] = fiveOrEight;
     dims[2] = rEl;
     plhs[1] = mxCreateNumericArray(3, dims, mxDOUBLE_CLASS, mxREAL);
+    outputMat = mxGetPr(plhs[1]);
     //tmp = new mxArray*[rEl];
     plhs[2] = mxCreateCellMatrix(rEl,1);
     plhs[3] = mxCreateCellMatrix(rEl,1);
@@ -200,7 +205,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         switch (model)
         {   
             case 0: //HH
-                neuron.vThres = vRest + (vT -vRest)*rHH;
+                neuron.vThres = vRest + 2*(vT -vRest)*rHH;
                 cout << "HH " << endl;
                 if (rk==2)
                     nc = RK2_HH(simV,m,n,h,gE,gI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim);
@@ -235,7 +240,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         // bilinear
         clock_gettime(clk_id,&tpS);
         nc = 0;
-        switch (model) {   
+        cout << " bilinear start " << endl;
+        switch (model) {    
             case 0: //HH
                 neuron.vThres = vRest + (vT -vRest)*rHH;
                 nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, rk, afterCrossBehavior, spikeShape, kVStyle);
@@ -255,6 +261,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         cout << "spikes: " << nc << endl;
 
         // linear 
+        cout << " linear start " << endl;
         clock_gettime(clk_id,&tpS);
         nc = 0;
         switch (model) {   
@@ -276,7 +283,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         cout << "spikes: " << nc << endl;
 
         cout << " copy traces to output matrix " << endl;
-        output = mxGetPr(plhs[0]);
         *(output + k*6 + 0) = cpu_t_sim;
         *(output + k*6 + 1) = cpu_t_bilinear;
         *(output + k*6 + 2) = cpu_t_linear;
@@ -293,10 +299,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
         outputArray[6] = &(n);
         outputArray[7] = &(h);
 
-        output = mxGetPr(plhs[1]);
         for (j=0;j<fiveOrEight;j++) {
             for (i=0;i<nt;i++) {
-                *(output+k*fiveOrEight*nt+j*nt+i) = outputArray[j]->at(i); 
+                *(outputMat+k*fiveOrEight*nt+j*nt+i) = outputArray[j]->at(i); 
             }   
         }
         cout << " copy inputs to output matrix " << endl;

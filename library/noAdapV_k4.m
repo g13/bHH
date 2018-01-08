@@ -1157,7 +1157,7 @@ function [kV,k,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,
        %parfor it = iidt:nt
        parfor it = iidt:nt
            [k(it,1,iv0),pV(:,it,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vDoubletV(it,:,iv0)');
-           kV(it,1,:,:,iv0) = reshape(vDoubletV(it,:,iv0)'-v2V(:,it,iv0),[n2,n1]);
+           kV(it,1,:,:,iv0) = reshape(vDoubletV(it,:,iv0)'-vaddV(:,it,iv0),[n2,n1]);
        end
     end
 
@@ -1214,7 +1214,7 @@ function [kV,k,pV,vaddV,vDoubletV,EI,h0] = doubleCheck(silico,name,para,v0,bool,
             parfor it = kkdt:nt
             %for it = 1:nt
                 [k(it,jdt,iv0),~] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vtmp(it,:,iv0)');
-                kV(it,jdt,:,:,iv0) = reshape(vtmp(it,:,iv0)'-v2V(:,it,iv0),[n2,n1]);
+                kV(it,jdt,:,:,iv0) = reshape(vtmp(it,:,iv0)'-vaddV(:,it,iv0),[n2,n1]);
             end
         end
     end
@@ -1282,7 +1282,7 @@ function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
             print(h,[dir,'/',fname,'.',picformat],printDriver,'-loose',dpi);
         end
         saveas(h,[dir,'/',fname,'.fig']);
-%         close(h);
+        close(h);
     end
 end
 function [vpred, b, t] = pred(vpred,i1,i2,sPSP1,v2,...

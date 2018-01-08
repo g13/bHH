@@ -265,7 +265,7 @@ unsigned int RK4_HH(std::vector<double> &v, std::vector<double> &m, std::vector<
         }
         if (insert) {
             if (spiked) {
-                if (vi*tstep >= tsp.back() + neuron.tref && v[vi] < vStop) {
+                if ((vi*tstep >= tsp.back() + neuron.tref) && v[vi] < vStop) {
                     ve = vi;
                     std::cout << "w/ spike " << v[vi] << ", passed " << j*tstep << "ms" << std::endl;
                     return spikeCount;
@@ -281,7 +281,7 @@ unsigned int RK4_HH(std::vector<double> &v, std::vector<double> &m, std::vector<
     }
     if (insert) {
         ve = nt-1;
-        std::cout << "not back at the end" << std::endl;
+        std::cout << "not back at the end, passed " << j*tstep << "ms" << std::endl;
     }
     return spikeCount;
 }
