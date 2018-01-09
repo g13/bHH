@@ -7,19 +7,18 @@ function fo(cfgFn)
     type = 'RS_exc_Rat';
     ith = 1;
     run_t = 1000;
-    load(p.libfile,'dtRange','vRange','sEPSP','sIPSP0','sEPSP0','dur','kV','kEI','kIE','kEE','kII','fE','fI','nE','ndt');
+    load(p.lib_file,'dtRange','vRange','dur','kEI','sEPSP0','sEPSP','fE','fI','nE','ndt');
     nt0 = size(sEPSP0,1);
-    nbt = size(kVEI,1);
-    ndt = size(kVEI,2);
+    nbt = size(kEI,1);
     nv = length(vRange);
     ndur = size(sEPSP,1);
     edur = dtRange(ndt) - p.ignore_t;
     tstep = dur/(ndur-1);
     run_nt = round(p.run_t/tstep) + 1;
-    DataFn = ['Data-',p.theme,'-',num2str(seed).bin'];
-    tInFn = ['tIn-',p.theme,'-',num2str(seed).bin'];
-    RasterFn = ['Raster-',p.theme,'-',num2str(seed).bin'];
-    cpuFn = ['cpuTime-',p.theme,'-',num2str(seed).bin'];
+    DataFn = ['Data-',p.theme,'-',num2str(p.seed),'.bin'];
+    tInFn = ['tIn-',p.theme,'-',num2str(p.seed),'.bin'];
+    RasterFn = ['Raster-',p.theme,'-',num2str(p.seed),'.bin'];
+    cpuFn = ['cpuTime-',p.theme,'-',num2str(p.seed),'.bin'];
     DataFid = fopen(DataFn);
     tInFid = fopen(tInFn);
     RasterFid = fopen(RasterFn);
@@ -29,20 +28,20 @@ function fo(cfgFn)
     set(0,'DefaultTextFontSize',FontSize-2);
     fStr = [fE,fI];
     t = 0:tstep:p.run_t;
+    rEl = length(p.rE);
     legendTable = {'sim','bi','li'};
     cpuTime = zeros(rEl,3);
     tspSize = zeros(rEl,3);
     rasterData = cell(rEl,3);
     err = zeros(rEl,2,2);
     for j = 1:rEl
-        outputMat = fread(fid,[run_nt,8],'double');
-        size(outputMat)
+        outputMat = fread(DataFid,[run_nt,8],'double');
         tspSize(j,1) = fread(RasterFid,[1,1], 'int');
-        rasterData{j,1} = fread(RasterFid,[ntsp,1], 'double');
-        tspSize(j,2)ntsp = fread(RasterFid,[1,1], 'int');
-        rasterData{j,1} = fread(RasterFid,[ntsp,1], 'double');
-        tspSize(j,3)ntsp = fread(RasterFid,[1,1], 'int');
-        trasterData{j,1} = fread(RasterFid,[ntsp,1], 'double');
+        rasterData{j,1} = fread(RasterFid,[tspSize(j,1),1], 'double');
+        tspSize(j,2) = fread(RasterFid,[1,1], 'int');
+        rasterData{j,1} = fread(RasterFid,[tspSize(j,2),1], 'double');
+        tspSize(j,3) = fread(RasterFid,[1,1], 'int');
+        trasterData{j,1} = fread(RasterFid,[tspSize(j,3),1], 'double');
         cpuTime(j,1) = fread(cpuFid,[1,1],'double');
         cpuTime(j,2) = fread(cpuFid,[1,1],'double');
         cpuTime(j,3) = fread(cpuFid,[1,1],'double');
@@ -197,5 +196,5 @@ function fo(cfgFn)
     ylabel('error per timestep vs RK2');
     legend({'linear','bilinear'});
     saveas(gcf,['err_rate','.fig']);
-    save([theme,'-Raster.mat'],'rasterData');
+    save([p.theme,'-Raster.mat'],'rasterData');
 end

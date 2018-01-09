@@ -134,7 +134,7 @@ int main(int argc, char **argv)
 	raster_file.open("Raster-" + theme + ".bin", ios::out|ios::binary);
 	tIncome_file.open("tIn-" + theme + ".bin", ios::out|ios::binary);
 	data_file.open("Data-" + theme + ".bin", ios::out|ios::binary);
-	cpu_file.open("cputTime-" + theme + ".bin", ios::out|ios::binary);
+	cpu_file.open("cpuTime-" + theme + ".bin", ios::out|ios::binary);
 
     for(i=0;i<neuroLib.nE;i++) {
         neuroLib.fE[i] = neuroLib.fE[i]/S;
