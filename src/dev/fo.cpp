@@ -209,6 +209,7 @@ int main(int argc, char **argv)
         unsigned int nc = 0;
         neuron.vThres = vRest + 2*(vT -vRest)*rHH;
         cout << "HH start" << endl;
+        plchldr_size1 = 0;
         nc = RK4_HH(simV,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim,false,0,plchldr_size0,plchldr_size1,plchldr_double);
         clock_gettime(clk_id,&tpE);
         cpu_t_sim = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
