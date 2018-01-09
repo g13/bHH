@@ -28,7 +28,7 @@ namespace po = boost::program_options;
 int main(int argc, char **argv)
 {
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
-    ofstream tIncome_file, raster_file, data_file;
+    ofstream tIncome_file, raster_file, data_file, cpu_file;
     ifstream cfg_file;
     string lib_file, para_file;
     mxArray *para ;
@@ -124,16 +124,17 @@ int main(int argc, char **argv)
     double pairs[3*2+2+3] = {gNa,vNa,gK,vK,gLeak,vLeak,vE,vI,vT,vRest,DeltaT};
                           //  0,  1, 2, 3,    4,    5, 6, 7, 8,   9,    10    
     theme = theme + "-" + to_string(seed);
-    ifstream ftmp;
-    i = 0;
-    while (ftmp.good()) {
-        theme = theme + "-" + to_string(i);
-        ftmp.open("Data" + theme + ".bin");
-        i = i + 1;
-    }
-	raster_file.open("Raster" + theme + ".bin", ios::out|ios::binary);
-	tIncome_file.open("tIn" + theme + ".bin", ios::out|ios::binary);
-	data_file.open("Data" + theme + ".bin", ios::out|ios::binary);
+    //ifstream ftmp;
+    //i = 0;
+    //while (ftmp.good()) {
+    //    theme = theme + "-" + to_string(i);
+    //    ftmp.open("Data" + theme + ".bin");
+    //    i = i + 1;
+    //}
+	raster_file.open("Raster-" + theme + ".bin", ios::out|ios::binary);
+	tIncome_file.open("tIn-" + theme + ".bin", ios::out|ios::binary);
+	data_file.open("Data-" + theme + ".bin", ios::out|ios::binary);
+	cpu_file.open("cputTime-" + theme + ".bin", ios::out|ios::binary);
 
     for(i=0;i<neuroLib.nE;i++) {
         neuroLib.fE[i] = neuroLib.fE[i]/S;
@@ -247,6 +248,10 @@ int main(int argc, char **argv)
         }
         outTsp.clear();
 
+        cpu_file.write((char*)&(tsp_sim),sizeof(double));
+        cpu_file.write((char*)&(tsp_bi), sizeof(double));
+        cpu_file.write((char*)&(tsp_li), sizeof(double));
+
         vector<double>* output[8] = {&simV,&biV,&liV,&gE,&gI,&m,&n,&h};
         for (i=0;i<8;i++) {
             data_file.write((char*)&(output[i]->at(0)), nt*sizeof(double));
@@ -285,4 +290,5 @@ int main(int argc, char **argv)
     if (data_file.is_open())        data_file.close();
     if (raster_file.is_open())      raster_file.close();
     if (tIncome_file.is_open())     tIncome_file.close();
+    if (cpu_file.is_open())         cpu_file.close();
 }
