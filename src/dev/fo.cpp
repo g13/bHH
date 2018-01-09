@@ -52,8 +52,10 @@ int main(int argc, char **argv)
     vector<double> gEb, gEl, gIb, gIl, ml, nl, hl, mb, nb, hb;
     vector<double> hEb, hEl, hIb, hIl, hE, hI;
     vector<size> crossb, crossl;
-	unsigned int seed0 = static_cast<unsigned int>(std::time(NULL));
     unsigned int seed;
+    bool spikeShape;
+    bool kVStyle;
+    int afterCrossBehavior;
     string config_file;
     string theme;
 
@@ -65,7 +67,7 @@ int main(int argc, char **argv)
 	Generic.add_options()
 		("lib_file,L",po::value<string>(&lib_file),"neuron library")
 		("para_file,p",po::value<string>(&para_file),"parameter file")
-        ("seed,s",po::value<unsigned int>(&seed),"seeding")
+        ("seed,s",po::value<unsigned int>(&seed)->default_value(static_cast<unsigned int>(std::time(NULL))),"seeding")
 		("theme",po::value<string>(&theme),"parameter file")
 		("ith,i", po::value<unsigned int>(&ith)->default_value(1), "i th neuron")
 		("rE", po::value<vector<double>>()->multitoken()->composing(), "Exc poisson rate")
@@ -74,6 +76,9 @@ int main(int argc, char **argv)
         ("vinit,v", po::value<unsigned int>(&vinit), "sim time")
         ("tref",po::value<double>(&tref),"refractory period")
         ("rLinear",po::value<double>(&rLinear),"linear->HH threshold")
+        ("afterCrossBehavior",po::value<int>(&afterCrossBehavior)->default_value(2)," 0:skip, 1:linear, 2:bilinear")
+        ("spikeShape",po::value<bool>(&spikeShape)->default_value(true)," if false, crossing is spiking")
+        ("kVStyle",po::value<bool>(&kVStyle)->default_value(true)," if false, crossing is spiking")
 		("ignore_t", po::value<double>(&ignore_t), "ingore time while applying bilinear rules");
 
 	cmd_line_options.add(Generic);
@@ -118,13 +123,18 @@ int main(int argc, char **argv)
     closeMat(matFile,para_file.c_str());
     double pairs[3*2+2+3] = {gNa,vNa,gK,vK,gLeak,vLeak,vE,vI,vT,vRest,DeltaT};
                           //  0,  1, 2, 3,    4,    5, 6, 7, 8,   9,    10    
-    
-    string prefix = to_string(static_cast<int>(rE))+"-"+to_string(static_cast<int>(rI))+"-";
-    theme = "-" + theme;
-	raster_file.open(prefix + "Raster" + theme + ".bin", ios::out|ios::binary);
-	tIncome_file.open(prefix + "tIn" + theme + ".bin", ios::out|ios::binary);
-	data_file.open(prefix + "Data" + theme + ".bin", ios::out|ios::binary);
-    if (!seed) seed = seed0;
+    theme = theme + "-" + to_string(seed);
+    ifstream ftmp;
+    i = 0;
+    while (ftmp.good()) {
+        theme = theme + "-" + to_string(i);
+        ftmp.open("Data" + theme + ".bin");
+        i = i + 1;
+    }
+	raster_file.open("Raster" + theme + ".bin", ios::out|ios::binary);
+	tIncome_file.open("tIn" + theme + ".bin", ios::out|ios::binary);
+	data_file.open("Data" + theme + ".bin", ios::out|ios::binary);
+
     for(i=0;i<neuroLib.nE;i++) {
         neuroLib.fE[i] = neuroLib.fE[i]/S;
         fStrength.push_back(neuroLib.fE[i]);
@@ -142,7 +152,6 @@ int main(int argc, char **argv)
     int rEl = rE.size();
     int rIl = rI.size();
     double rHH = 1.0;
-    double rLinear = 0.8;
     double rBilinear = rLinear;
     double vCrossl = vRest + (vT -vRest);
     double vBackl = vRest + (vT -vRest)*rLinear;
@@ -184,8 +193,6 @@ int main(int argc, char **argv)
         // get external inputs
         double rEt= rE[k]/1000;
         double rIt= rI[k]/1000; 
-        if (rE == 0.0) neuron.extE = false;
-        if (rI == 0.0) neuron.extI = false;
         while (neuron.status) neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
 
         // HH sim 
@@ -211,7 +218,7 @@ int main(int argc, char **argv)
         nc = 0;
         clock_gettime(clk_id,&tpS);
         cout << " bilinear start " << endl;
-        neuron.vThres = vRest + (vT -vRest)*rHH;
+        neuron.vThres = vRest + 2*(vT -vRest)*rHH;
         nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
         clock_gettime(clk_id,&tpE);
         cpu_t_bilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
@@ -229,9 +236,9 @@ int main(int argc, char **argv)
         cout << "spikes: " << nc << endl;
        
         // data output
-        writeTimeID(neuron.tin, neuron.inID tIncome_file);
+        writeTimeID(neuron.tin, neuron.inID, tIncome_file);
         
-        vector<double> outTsp;
+        vector<vector<double>> outTsp;
         outTsp.push_back(tsp_sim);
         outTsp.push_back(tsp_bi);
         outTsp.push_back(tsp_li);

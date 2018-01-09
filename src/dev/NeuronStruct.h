@@ -160,19 +160,20 @@ typedef struct NeuronStruct{
     }
 } Neuron;
 
-void writeTime(vector<double> t, std::ofstream &raster_file) {
-    int i = vector.size(); 
-    raster_file.write((char*)&size, sizeof(i));
+void writeTime(std::vector<double> &t, std::ofstream &raster_file) {
+    int i = t.size(); 
+    raster_file.write((char*)&i, sizeof(i));
     if (i!=0) {
-        raster_file.write((char*)&(t[0]), i*sizeof(tsp[0]));
+        raster_file.write((char*)&(t[0]), i*sizeof(t[0]));
     }
 }
-int writeTimeID(vector<double> t, vector<size_b> ID, std::ofstream &raster_file) {
+
+int writeTimeID(std::vector<double> &t, std::vector<size_b> &ID, std::ofstream &raster_file) {
     if (t.size() != ID.size()) {
-        std::cout << " ID and t need to have the same size" << endl;
+        std::cout << " ID and t need to have the same size" << std::endl;
         return 0;
     }
-    writeTime(t, &raster_file) {
+    writeTime(t, raster_file);
     if (ID.size()>0) {
         raster_file.write((char*)&(ID[0]), ID.size()*sizeof(ID[0]));
     }
