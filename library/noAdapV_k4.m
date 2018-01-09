@@ -334,6 +334,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 if pp0
                     fname = [num2str(idt),'dt-EE'];
                     printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
+                    fname = [num2str(idt),'k-EE'];
+                    printpic(hEE0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
             if testII
@@ -350,6 +352,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 if pp0
                     fname = [num2str(idt),'dt-II'];
                     printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
+                    fname = [num2str(idt),'k-II'];
+                    printpic(hII0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
             if testEI
@@ -366,6 +370,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 if pp0
                     fname = [num2str(idt),'dt-EI'];
                     printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
+                    fname = [num2str(idt),'k-EI'];
+                    printpic(hEI0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
             if testIE
@@ -382,6 +388,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 if pp0
                     fname = [num2str(idt),'dt-IE'];
                     printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
+                    fname = [num2str(idt),'k-IE'];
+                    printpic(hIE0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
         end

@@ -20,6 +20,6 @@ module load matlab
 module load boost
 date
 
-./fo && matlab -nosplash -r "fo();exit;"
+./fo && matlab -nosplash -r "fo('$picformat','test.cfg');exit;"
 date
 hostname

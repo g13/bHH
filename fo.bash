@@ -1,6 +1,7 @@
 #!/bin/bash
 dir=$1
-if [ "$fdr" == "" ]; then
+picformat=$2
+if [ "$dir" == "" ]; then
     echo using default folder "test"
     dir='test'
 fi
@@ -17,4 +18,6 @@ cp fo.slurm $dir
 cp ../input.cfg $dir/test.cfg
 
 cd $dir
-sbatch fo.slurm
+export dir
+
+sbatch --export=ALL fo.slurm

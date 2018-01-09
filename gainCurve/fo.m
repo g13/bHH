@@ -1,8 +1,31 @@
-function fo(cfgFn)
-    if nargin < 1
+function fo(picformat,cfgFn)
+    if nargin < 2
         cfgFn = 'test.cfg';
+        if nargin < 1
+            picformat = 'fig';
+        end
     end
-    fclose('all');
+    dir = '../';
+    %  paper
+    width = 11;     height = width/16*9;
+    % figure
+    mleft = 0.0;    left = mleft*width;
+    mbot = 0.0;     bot = mbot*height;    
+    mright = 0.0;   fwidth = width-mleft-width*mright;
+    mtop = 0.0;     fheight = height-mbot-height*mtop;
+    pos0 = [width, height, left,bot,fwidth,fheight];  
+    if ~isempty(picformat)
+        if strcmp(picformat,'psc2')
+            printDriver = ['-de',picformat];
+            picformat = 'eps';
+        else
+            printDriver = ['-d',picformat];
+        end
+        dpi = '-r300';
+    else
+        dpi = '';
+        printDriver = '';
+    end
     p = read_cfg(cfgFn);
     type = 'RS_exc_Rat';
     ith = 1;
@@ -176,7 +199,8 @@ function fo(cfgFn)
                 text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
             end
         end
-        saveas(gcf,[p.theme,'-trial',num2str(j),'.fig']);
+        fname =[p.theme,'-trial',num2str(j)];
+        printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
     end
     fclose(DataFid);
     fclose(tInFid);
@@ -193,8 +217,27 @@ function fo(cfgFn)
     errorbar(p.rE+p.rI,err(:,1,1),err(:,2,1),'b');
     errorbar((p.rE+p.rI)+0.2,err(:,1,2),err(:,2,2),'r');
     xlabel('E+I input rate');
-    ylabel('error per timestep vs RK2');
+    ylabel('error per timestep');
     legend({'linear','bilinear'});
-    saveas(gcf,['err_rate','.fig']);
+    fname =[p.theme,'-err_rate'];
+    printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
     save([p.theme,'-Raster.mat'],'rasterData');
+end
+function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
+    if ~isempty(picformat)
+        set(h,'PaperUnits', 'inches','PaperSize',pos(1:2));
+        set(h,'PaperPosition',pos(3:6));
+    %         set(h,'PaperType','usletter');
+    %         set(h,'PaperOrientation','portrait');
+        set(h,'Units','inches');
+    %     set(h,'OuterPosition',pos(7:10));
+    %     set(h,'Position',pos(3:6)+8);
+        set(h,'Renderer','Painter');
+    % %     set(h,'PaperPositionMode','auto');
+        if ~strcmp(picformat,'fig')
+            print(h,[dir,'/',fname,'.',picformat],printDriver,'-loose',dpi);
+        end
+        saveas(h,[dir,'/',fname,'.fig']);
+        close(h);
+    end
 end
