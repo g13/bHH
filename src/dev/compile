@@ -1,2 +1,2 @@
 #!/bin/bash
-g++ -std=c++11 -msse4.2 -march=westmere -fPIC -fno-omit-frame-pointer -fmax-errors=2 -O2 -lboost_program_options -lmx -lmat fo.cpp -o ../../gainCurve/fo
+g++ -std=c++11 -msse4.2 -march=westmere -fPIC -fno-omit-frame-pointer -fmax-errors=2 -g3 -lboost_program_options -lmx -lmat fuo.cpp -o ../../gainCurve/fo

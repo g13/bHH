@@ -31,12 +31,12 @@ int main(int argc, char **argv)
     ofstream tIncome_file, raster_file, data_file, cpu_file;
     ifstream cfg_file;
     string lib_file, para_file;
-    mxArray *para ;
+    mxArray *para;
     double cpu_t_sim, cpu_t_bilinear, cpu_t_linear;
     double rLinear;
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
     struct timespec tpS, tpE;
-    unsigned int ith,i,j,nt;
+    unsigned int ith, nt;
     vector<double> rE, rI;
     double run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir;
     double gNa, vNa, gK, vK, gLeak, vLeak, vT, vE, vI, vRest, DeltaT,S;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
 		("rE", po::value<vector<double>>()->multitoken()->composing(), "Exc poisson rate")
 		("rI", po::value<vector<double>>()->multitoken()->composing(), "Inh poisson rate")
 		("run_t,t", po::value<double>(&run_t), "sim time")
-        ("vinit,v", po::value<unsigned int>(&vinit), "sim time")
+        ("vinit,v", po::value<unsigned int>(&vinit), "vinit")
         ("tref",po::value<double>(&tref),"refractory period")
         ("rLinear",po::value<double>(&rLinear),"linear->HH threshold")
         ("afterCrossBehavior",po::value<int>(&afterCrossBehavior)->default_value(2)," 0:skip, 1:linear, 2:bilinear")
@@ -91,12 +91,10 @@ int main(int argc, char **argv)
 		notify(vm);
 	} else {
 		cout << "cannot open the configuration file: " << config_file << endl;
-		return 0;
+		return 1;
 	}
 	cfg_file.close();
    
-    neuroLib.readLib(lib_file.c_str());
-    
     openMat(matFile,para_file.c_str());
 
     para = matGetVariable(matFile,"para");
@@ -121,26 +119,37 @@ int main(int argc, char **argv)
 
     mxDestroyArray(para);
     closeMat(matFile,para_file.c_str());
+
+    neuroLib.readLib(lib_file.c_str());
+    
     double pairs[3*2+2+3] = {gNa,vNa,gK,vK,gLeak,vLeak,vE,vI,vT,vRest,DeltaT};
                           //  0,  1, 2, 3,    4,    5, 6, 7, 8,   9,    10    
     theme = theme + "-" + to_string(seed);
-    //ifstream ftmp;
-    //i = 0;
-    //while (ftmp.good()) {
-    //    theme = theme + "-" + to_string(i);
-    //    ftmp.open("Data" + theme + ".bin");
-    //    i = i + 1;
-    //}
 	raster_file.open("Raster-" + theme + ".bin", ios::out|ios::binary);
 	tIncome_file.open("tIn-" + theme + ".bin", ios::out|ios::binary);
 	data_file.open("Data-" + theme + ".bin", ios::out|ios::binary);
 	cpu_file.open("cpuTime-" + theme + ".bin", ios::out|ios::binary);
-
-    for(i=0;i<neuroLib.nE;i++) {
+    if (!raster_file) {
+        cout << " failed to open file for writing" << endl;
+        return 1;
+    }
+    if (!tIncome_file) {
+        cout << " failed to open file for writing" << endl;
+        return 1;
+    }
+    if (!data_file) {
+        cout << " failed to open file for writing" << endl;
+        return 1;
+    }
+    if (!cpu_file) {
+        cout << " failed to open file for writing" << endl;
+        return 1;
+    }
+    for(size i=0;i<neuroLib.nE;i++) {
         neuroLib.fE[i] = neuroLib.fE[i]/S;
         fStrength.push_back(neuroLib.fE[i]);
     }
-    for(i=0;i<neuroLib.nI;i++) {
+    for(size i=0;i<neuroLib.nI;i++) {
         neuroLib.fI[i] = neuroLib.fI[i]/S;
         fStrength.push_back(-neuroLib.fI[i]);
     }
@@ -194,8 +203,22 @@ int main(int argc, char **argv)
         // get external inputs
         double rEt= rE[k]/1000;
         double rIt= rI[k]/1000; 
-        while (neuron.status) neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
-
+        vector<vector<double>> tPoi(neuroLib.nE+neuroLib.nI,vector<double>());
+        while (neuron.status) {
+            neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
+            tPoi[neuron.inID.back()].push_back(neuron.tin.back());
+        }
+        for (size i=0;i<neuroLib.nE+neuroLib.nI; i++) {
+            cout << i << ": {";
+            for (size j=0;j<tPoi[i].size();j++) {
+                cout << tPoi[i][j];
+                if (j < tPoi[i].size()-1) {
+                    cout << ", ";
+                }
+            }
+            cout << "}" << endl;
+        }
+        cout << endl;
         // HH sim 
         clock_gettime(clk_id,&tpS);
         neuron.vReset = vRest;
@@ -244,7 +267,7 @@ int main(int argc, char **argv)
         outTsp.push_back(tsp_sim);
         outTsp.push_back(tsp_bi);
         outTsp.push_back(tsp_li);
-        for (i = 0; i< 3; i++) {
+        for (size i = 0; i< 3; i++) {
             writeTime(outTsp[i], raster_file);
         }
         outTsp.clear();
@@ -254,7 +277,7 @@ int main(int argc, char **argv)
         cpu_file.write((char*)&(tsp_li), sizeof(double));
 
         vector<double>* output[8] = {&simV,&biV,&liV,&gE,&gI,&m,&n,&h};
-        for (i=0;i<8;i++) {
+        for (size i=0;i<8;i++) {
             data_file.write((char*)&(output[i]->at(0)), nt*sizeof(double));
         }
         neuron.clear();
@@ -285,11 +308,12 @@ int main(int argc, char **argv)
         biV.clear();
         liV.clear();
     }
-    neuroLib.clearLib();
-    cout << "size: " <<  sizeof(size) << " bytes" << endl;
-    cout << "size_b: "<< sizeof(size_b) << " bytes" << endl;
     if (data_file.is_open())        data_file.close();
     if (raster_file.is_open())      raster_file.close();
     if (tIncome_file.is_open())     tIncome_file.close();
     if (cpu_file.is_open())         cpu_file.close();
+    cout << "size: " <<  sizeof(size) << " bytes" << endl;
+    cout << "size_b: "<< sizeof(size_b) << " bytes" << endl;
+    neuroLib.clearLib();
+	return 0;
 }

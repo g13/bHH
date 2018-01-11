@@ -19,5 +19,6 @@ cp ../input.cfg $dir/test.cfg
 
 cd $dir
 export dir
+export picformat 
 
 sbatch --export=ALL fo.slurm

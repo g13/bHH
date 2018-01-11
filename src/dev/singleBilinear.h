@@ -144,7 +144,7 @@ inline void interpK(std::vector<double> &v, size vs, double ****k, double ****PS
     }
 
     for (size i=0;i<tl;i++) {
-        base = PSP0[iv][idt][fi][idt0+i];
+        base = PSP0[iv][idt][fi][iidt+i];
         tmpPSP0[i] = base + rv*(PSP0[jv][idt][fi][iidt+i]-base) + rdt*(PSP0[iv][jdt][fi][jjdt+i]-base) + rf*(PSP0[iv][idt][fj][iidt+i]-base);
     }
 

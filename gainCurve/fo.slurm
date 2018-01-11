@@ -19,7 +19,7 @@ module load gcc
 module load matlab
 module load boost
 date
-
+echo $picformat
 ./fo && matlab -nosplash -r "fo('$picformat','test.cfg');exit;"
 date
 hostname

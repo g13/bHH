@@ -178,7 +178,7 @@ typedef struct NeuronLibrary
     }
     // clear mem
     void clearLib() {
-        size dimSize[4];
+        size dimSize[6];
         dimSize[5] = nt;
         dimSize[4] = ndt;
         dimSize[3] = nE+nI;
