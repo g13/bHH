@@ -133,7 +133,7 @@ function fo(picformat,cfgFn)
                 text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
             end
         end
-        legend(legendTable);
+        legend(legendTable,'Location','northwest');
         ylim([minV,maxV]);
         subplot(2,2,3);
         hold on;

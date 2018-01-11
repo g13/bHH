@@ -6,6 +6,7 @@
 #SBATCH --mem=16G
 #SBATCH --time=00:10:00
 #SBATCH -o fo_%J.out
+#SBATCH --job-name=fO
 #SBATCH --mail-user=wd554@nyu.edu
 #SBATCH --mail-type=END
 

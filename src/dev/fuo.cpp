@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 		("para_file,p",po::value<string>(&para_file),"parameter file")
         ("seed,s",po::value<unsigned int>(&seed)->default_value(static_cast<unsigned int>(std::time(NULL))),"seeding")
 		("theme",po::value<string>(&theme),"parameter file")
-		("ith,i", po::value<unsigned int>(&ith)->default_value(1), "i th neuron")
+		("ith,i", po::value<unsigned int>(&ith)->default_value(1), "i(>0) th neuron")
 		("rE", po::value<vector<double>>()->multitoken()->composing(), "Exc poisson rate")
 		("rI", po::value<vector<double>>()->multitoken()->composing(), "Inh poisson rate")
 		("run_t,t", po::value<double>(&run_t), "sim time")
@@ -107,7 +107,8 @@ int main(int argc, char **argv)
     getFieldVar(vK, para, 0, "vK");
     getFieldVar(vE, para, 0, "vE");
     getFieldVar(vI, para, 0, "vI");
-    
+   
+    ith = ith-1; 
     getIthElementOfFieldArray(gNa,para,ith,"gNa");
     getIthElementOfFieldArray(gK,para,ith,"gK");
     getIthElementOfFieldArray(gLeak,para,ith,"gLeak");
