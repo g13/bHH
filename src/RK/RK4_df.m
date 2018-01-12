@@ -141,6 +141,8 @@ for i=1:count-1
         r=ynew(:,7);
         s=s_inf(v,para.vX(ipick));
         u=ynew(:,9);
+    else
+        t = t+tstep;
     end
     y(:,i+1,:) = [v,m,n,h,p,q,r,s,u]';
 end 
