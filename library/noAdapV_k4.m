@@ -10,12 +10,12 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     set(0,'DefaultAxesFontSize',FontSize);
     set(0,'DefaultTextFontSize',FontSize-2);
     %tstep = 1/32;
-    tstep = 1/10;
+    tstep = 1/32;
     dur = 300; % bilinear k length
     %dur = 100; % bilinear k length
     dur0 = dur; % linear length
-    %dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
-    dtRange = [0,4,12,22,26,60];
+    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
+    %dtRange = [0,4,12,22,26,60];
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
@@ -1264,6 +1264,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             plot(t(pick),vadd(range(i2),pick,iv0),':k');
             plot(t(pick),pv(range(i2),pick,iv0),'--m');
             plot(t(pick),vdoub(pick,range(i2),iv0),'--g');
+            plot(t(pick),zeros(length(pick),1),'-k');
             xlim([t(pick(1)),t(pick(end))]);
             ylabel('PSP mV');
             subplot(2,1,2);
@@ -1277,14 +1278,15 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             yl(2) = min(1.5,yl(2)+0.1*abs(yl(2)));
             ax(1).YLim = yl;
             ax(1).YTickMode = 'auto';
-            ax(1).YLabel('PSP mV');
+            ax(1).YLabel.String = 'PSP mV';
             ax(2).YColor = 'b';
-            ax(2).YLim = [0,1];
+            ax(2).YLim = [0,1.1];
             ax(2).YTickMode = 'auto';
-            ax(2).YLabel('rsquare');
+            ax(2).YLabel.String = 'rsquare';
             h1.Color = 'r';
             h2.Color = 'b';
-            xlim([t(pick(1)),t(pick(end))]);
+            ax(1).XLim = [t(pick(1)),t(pick(end))];
+            ax(2).XLim = [t(pick(1)),t(pick(end))];
             xlabel('t ms');
             pp = false;
         end
@@ -1332,9 +1334,11 @@ function h = drawExample(pv0,vadd0,vDoublet0,vleakage0,t,iidt,tp0,k0,n,vRange,vR
         plot(v12(:,tp),(vDoublet(tp,:)'-vadd(:,tp)),'o');
         xx = sort(v12(:,tp));
         plot(xx,xx*k(tp),':k','LineWidth',1.5);
-        ylabel('V_{SC}');
-        xlabel(xl);
-        title({['k = ',num2str(k(tp),'%.3g')]});
+        if (inv0==length(iv0Case))
+            ylabel('V_{SC}');
+            xlabel(xl);
+        end
+        title({['k = ',num2str(k(tp),'%.3g'),' at v' num2str(iv0)]});
         inv0 = inv0 + 1;
     end
 end
