@@ -14,8 +14,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     dur = 300; % bilinear k length
     %dur = 100; % bilinear k length
     dur0 = dur; % linear length
-    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
-    %dtRange = [0,4,12,22,26,60];
+    %dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
+    dtRange = [0,4,12,22,26,60];
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
@@ -386,7 +386,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 end
                 if pp0
                     if length(h) > 0
-                        fname = [num2str(idt),'dt-IE'];
+                        fname = [h.FileName,'-IE'];
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-IE'];
@@ -1248,10 +1248,11 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             %disp('drawing dt here');
             h0 = figure;
             t = 0:tstep:dur;
-            iv0 = randi(nv0,1); 
+            iv0 = nv0;
             range = (i1-1)*n2+(1:n2);
             subplot(2,1,1);
-            title([num2str(iv0),'th v, ', num2str(jdt), 'th dt']);
+            h0.FileName = [num2str(jdt), 'th dt'];
+            title([num2str(iv0),'th v, ',h0.FileName]);
             hold on
             if jdt == ndt
                 pick = jjdt:nt;
@@ -1262,7 +1263,9 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             plot(t(pick),v2V(range(i2),pick,iv0),':b');
             plot(t(pick),vadd(range(i2),pick,iv0),':k');
             plot(t(pick),pv(range(i2),pick,iv0),'--m');
-            plot(t(pick),vdoub(pick,range(i2),iv0),'--g')
+            plot(t(pick),vdoub(pick,range(i2),iv0),'--g');
+            xlim([t(pick(1)),t(pick(end))]);
+            ylabel('PSP mV');
             subplot(2,1,2);
             plot(t(pick),k(pick,jdt,iv0));
             [ax,h1,h2] = plotyy(t(pick),k(pick,jdt,iv0),t(pick),r2(pick,jdt,iv0));
@@ -1274,11 +1277,15 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             yl(2) = min(1.5,yl(2)+0.1*abs(yl(2)));
             ax(1).YLim = yl;
             ax(1).YTickMode = 'auto';
+            ax(1).YLabel('PSP mV');
             ax(2).YColor = 'b';
             ax(2).YLim = [0,1];
             ax(2).YTickMode = 'auto';
+            ax(2).YLabel('rsquare');
             h1.Color = 'r';
             h2.Color = 'b';
+            xlim([t(pick(1)),t(pick(end))]);
+            xlabel('t ms');
             pp = false;
         end
     end
