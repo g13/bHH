@@ -10,9 +10,9 @@ function [coeff,pred,r2]=p_fit110k0(x,y,z0)
     end
     pred=A*coeff+x+y;
     vpred = z0 - pred;
-    SSres = vpred*vpred'
+    SSres = vpred'*vpred;
     vtot = z0 - mean(z0);
-    SStot = vtot * vtot'
+    SStot = vtot' * vtot;
     if (SStot == 0)
         r2 = 1;
     else

@@ -30,7 +30,7 @@ count=round((etime-stime)./tstep)+1;
 y=zeros(9,count,nf);
 t=stime;
 
-if round(para.vtime/tstep)+1 == 1
+if para.vtime ~= -1
     v0 = ones(nf,1)*para.newv;
 end
 

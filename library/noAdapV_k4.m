@@ -13,8 +13,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     %dur = 300; % bilinear k length
     dur = 100; % bilinear k length
     dur0 = dur; % linear length
-    %dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
-    dtRange = [0,4,12,22,26,60];
+    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
+    %dtRange = [0,4,12,22,26,60];
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
@@ -331,7 +331,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 para.f_I = zeros(size(para.f_E));
                 [kV(:,:,1:nE,1:nE,idt,:),kEE(:,:,idt,:),pv,vadd,vEEDoublet,vEE,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sEPSP,sEPSP,vRange,pp0,idt,ndt,dtRange);
                 if dtplot
-                    hEE0(idtplot) = drawExample(hEE0(idtplot),pv,vadd,vEEDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kEE(:,1,idt,:),nE*nE,vRange,para.vRest(i),vEE,'V_{E}V_{E}','EE');
+                    hEE0(idtplot) = drawExample(hEE0(idtplot),pv,vadd,vEEDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kEE(:,idt,idt,:),nE*nE,vRange,para.vRest(i),vEE,'V_{E}V_{E}','EE');
                 end
                 if pp0
                     if length(h) > 0
@@ -339,7 +339,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-EE'];
-                    printpic(hEE0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
+                    printpic(hEE0(idtplot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
             if testII
@@ -351,7 +351,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 para.f_E = zeros(size(para.f_I));
                 [kV(:,:,nE+1:nF,nE+1:nF,idt,:),kII(:,:,idt,:),pv,vadd,vIIDoublet,vII,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sIPSP,sIPSP,vRange,pp0,idt,ndt,dtRange);
                 if dtplot
-                    hII0(idtplot) = drawExample(hII0(idtplot),pv,vadd,vIIDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kII(:,1,idt,:),nI*nI,vRange,para.vRest(i),vII,'V_{I}V_{I}','II');
+                    hII0(idtplot) = drawExample(hII0(idtplot),pv,vadd,vIIDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kII(:,idt,idt,:),nI*nI,vRange,para.vRest(i),vII,'V_{I}V_{I}','II');
                 end
                 if pp0
                     if length(h) > 0
@@ -359,7 +359,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-II'];
-                    printpic(hII0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
+                    printpic(hII0(idtplot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
             if testEI
@@ -371,7 +371,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 para.tI = dtRange(idt)*ones(nE*nI,1);
                 [kV(:,:,nE+1:nF,1:nE,idt,:),kEI(:,:,idt,:),pv,vadd,vEIDoublet,vEI,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sEPSP,sIPSP,vRange,pp0,idt,ndt,dtRange);
                 if dtplot
-                    hEI0(idtplot) = drawExample(hEI0(idtplot),pv,vadd,vEIDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kEI(:,1,idt,:),nE*nI,vRange,para.vRest(i),vEI,'V_{E}V_{I}','EI');
+                    hEI0(idtplot) = drawExample(hEI0(idtplot),pv,vadd,vEIDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kEI(:,idt,idt,:),nE*nI,vRange,para.vRest(i),vEI,'V_{E}V_{I}','EI');
                 end
                 if pp0
                     if length(h) > 0
@@ -379,7 +379,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-EI'];
-                    printpic(hEI0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
+                    printpic(hEI0(idtplot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
             if testIE
@@ -391,7 +391,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 para.tE = dtRange(idt)*ones(nE*nI,1);
                 [kV(:,:,1:nE,nE+1:nF,idt,:),kIE(:,:,idt,:),pv,vadd,vIEDoublet,vIE,h] = doubleCheck(silico,name,para,vv0,bool,tstep,iidt,dur,i,vleakage,sIPSP,sEPSP,vRange,pp0,idt,ndt,dtRange);
                 if dtplot
-                    hIE0(idtplot) = drawExample(hIE0(idtplot),pv,vadd,vIEDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kIE(:,1,idt,:),nE*nI,vRange,para.vRest(i),vIE,'V_{I}V_{E}','IE');
+                    hIE0(idtplot) = drawExample(hIE0(idtplot),pv,vadd,vIEDoublet,squeeze(vleakage(:,idt,:)),t,iidt,tp0,kIE(:,idt,idt,:),nE*nI,vRange,para.vRest(i),vIE,'V_{I}V_{E}','IE');
                 end
                 if pp0
                     if length(h) > 0
@@ -399,7 +399,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-IE'];
-                    printpic(hIE0(idtPlot),diri,fname,picformat,printDriver,dpi,pos0);
+                    printpic(hIE0(idtplot),diri,fname,picformat,printDriver,dpi,pos0);
                 end
             end
         end
@@ -851,54 +851,14 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         legend([e],{'k'});
         ylabel('error mV');
         xlim([0.5,2.5]);
-        ax4 = subplot(2,2,4);
-%         xl = [t(min(tEs(round(nfE/2)),tIs(round(nfI/2)))),t(nt)];
-        ix = min(23,nfE);
-        ixl = [tEs(ix),tEe(ix)];
-%         ixl = [min(tEs(round(nfE/2)),tIs(round(nfI/2))),min(tEe(round(nfE*3/4)),tIe(round(nfI*3/4)))];
-        xl = t(ixl);
-        hs = findobj(ax1,'-not','Type','Axes','-and','-not','Type','Text');
-        copyobj(hs,ax4);
+        subplot(2,2,4);
         hold on
-        sl = max(v(ixl(1):ixl(2)))-min(v(ixl(1):ixl(2)));
-        y2 = [min(v(ixl(1):ixl(2)))-sl*1.2,max(v(ixl(1):ixl(2))) + sl*1.2];
-        for iE = 1:nfE
-            if para.tE(iE) > xl(1) && para.tE(iE) < xl(2)
-                text(para.tE(iE),vTargetE(iE)-sl*0.1,num2str(iE),'Color','r','FontSize',FS);
-                text(para.tE(iE),vTargetE(iE)-sl*0.2,num2str(pfE(iE)),'Color','r','FontSize',FS);
-            end
-            if para.tE(iE)+durpsp > xl(1) && para.tE(iE)+durpsp < xl(2)
-                text(para.tE(iE)+durpsp,v(tEs(iE)+l0)+sl*0.1,num2str(iE),'Color','r','FontSize',FS);
-                text(para.tE(iE)+durpsp,v(tEs(iE)+l0)+sl*0.2,num2str(pfE(iE)),'Color','r','FontSize',FS);
-            end
-        end
-        for iI = 1:nfI
-            if para.tI(iI) > xl(1) && para.tI(iI) < xl(2)
-                text(para.tI(iI),vTargetI(iI)-sl*0.1,num2str(iI),'Color','b','FontSize',FS);
-                text(para.tI(iI),vTargetI(iI)-sl*0.2,num2str(pfI(iI)),'Color','b','FontSize',FS);
-            end
-            if para.tI(iI)+durpsp > xl(1) && para.tI(iI)+durpsp < xl(2)
-                text(para.tI(iI)+durpsp,v(tIs(iI)+l0)+sl*0.1,num2str(iI),'Color','b','FontSize',FS);
-                text(para.tI(iI)+durpsp,v(tIs(iI)+l0)+sl*0.2,num2str(pfI(iI)),'Color','b','FontSize',FS);
-            end
-        end
-        if ~poiend
-            selectE = (para.tE + durpsp <= xl(2) ) & (para.tE + durpsp >= xl(1));
-            sfE = sum(selectE);
-            selectI = (para.tI + durpsp <= xl(2) ) & (para.tI + durpsp >= xl(1));
-            sfI = sum(selectI);
-            if sfE>0
-                plot(ones(2,1)*para.tE(selectE)+durpsp,[v(tEs(selectE)+l0)';y(2)*ones(1,sfE)],':r');
-            end
-            if sfI>0
-                plot(ones(2,1)*para.tI(selectI)+durpsp,[v(tIs(selectI)+l0)';y(2)*ones(1,sfI)],':b');
-            end
-        end
+        plot(t,vadd-v,'--m');
+        plot(t,vpred-v,':m');
         xlabel('ms');
-        ylabel('mV');
-        xlim(xl);
+        ylabel('err mV');
+        xlim([t(1),t(end)]);
         
-        ylim([y2(1),y2(2)]);
         printpic(hM,diri,fname,picformat,printDriver,dpi,pos0);
     end
 end
@@ -1137,6 +1097,7 @@ function tmp = interpPSPdt(vec,i,tar,ref,l,eov)
     tmp = base + r*(vec(ref(j)+(0:(l-1)),:,j)-base);
 end
 function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,bool,tstep,iidt,dur,i,vleakage,sPSP1,sPSP2,vRange,pp,idt,ndt,dtRange)
+    global nvplot ndtplot iv0Case idtCase
     n1 = size(sPSP1,2);
     n2 = size(sPSP2,2);
     nt = round(dur/tstep)+1;
@@ -1177,40 +1138,49 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
 
     v1v2 = v1V.*v2V;
     h0 = [];
+
+    vadd = zeros(n1*n2,nt,nv0);
     idtRange = round(dtRange/tstep)+1;
-    vdoub = zeros(nt,n1*n2,nv0);
     for jdt = (idt+1):ndt
         jjdt = idtRange(jdt);
+        para.vtime = (jjdt-1)*tstep;
         if jdt == ndt
             dtOI = jjdt:nt;
+            iend = nt;
         else
             dtOI = jjdt:idtRange(ndt);
+            iend = idtRange(ndt);
         end
         dtl = length(dtOI);
-        para.vtime = jjdt*tstep;
+        para.vtime = (jjdt-1)*tstep;
+        vdoub = zeros(nt,n1*n2,nv0);
         parfor iv0 = 1:nv0
             param = para;
             param.newv = vRange(iv0);
             tmp = silico(name,v0,param,bool,tstep,dur,i,false);
             vdoub(:,:,iv0) = squeeze(tmp(1,:,:));
-            vleak = vleakage(dtOI,jdt,iv0);
-            vdoub(dtOI,:,iv0) = vdoub(dtOI,:,iv0) - repmat(vleak,[1,n1*n2]);
         end
         pv = zeros(n1*n2,nt,nv0);
         for iv0 = 1:nv0
+            vleak = vleakage(dtOI,jdt,iv0);
+            vdoub(dtOI,:,iv0) = vdoub(dtOI,:,iv0) - repmat(vleak,[1,n1*n2]);
             tmp = interpPSPdt(squeeze(sPSP2(:,:,:,iv0)),idt,jjdt-iidt,idtRange,dtl,nt);
             for iF = 1:n1
                 range = (iF-1)*n2+(1:n2);
                 v1V(range,dtOI,iv0) = (sPSP1(dtOI,iF,jdt,iv0)*ones(1,n2))';
                 v2V(range,dtOI,iv0) = tmp';
             end
-            vadd = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
-            parfor it = jjdt:nt
+            vadd(:,dtOI,iv0) = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
+            for it = jjdt:iend
                 [k(it,jdt,iv0),pv(:,it,iv0),r2(it,jdt,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vdoub(it,:,iv0)');
                 kV(it,jdt,:,:,iv0) = reshape(vdoub(it,:,iv0)'-vadd(:,it,iv0),[n2,n1]);
             end
         end
+        jdt
+        idtCase
+        pp
         if pp && sum(find((jdt-idtCase==0)>1))
+            disp('drawing dt here');
             h0 = figure;
             t = 0:tstep:dur;
             iv0 = randi(nv0,1); 
@@ -1221,7 +1191,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             pick = jjdt:nt;
             plot(t(pick),v1V(range(1),pick,iv0),':r');
             plot(t(pick),v2V(range(i2),pick,iv0),':b');
-            plot(t(pick),vaddV(range(i2),pick,iv0),':k');
+            plot(t(pick),vadd(range(i2),pick,iv0),':k');
             plot(t(pick),pv(range(i2),pick,iv0),'--m');
             plot(t(pick),vdoub(pick,range(i2),iv0),'--g')
             subplot(2,1,2);
@@ -1293,6 +1263,7 @@ function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
         set(h,'Renderer','Painter');
     % %     set(h,'PaperPositionMode','auto');
         if ~strcmp(picformat,'fig')
+            disp('saving fname');
             print(h,[dir,'/',fname,'.',picformat],printDriver,'-loose',dpi);
         end
         saveas(h,[dir,'/',fname,'.fig']);
