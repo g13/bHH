@@ -11,10 +11,10 @@ name = 'RS_exc_Rat';
     % 'LTS_associa_Cat'
     % 'LTS_somato_Rat'
     % 'TR_somato_Rat'
-theme = 'test-p';
+theme = 'test';
 pick = 1;
 model = 'HH';
-picformat = 'fig';
+picformat = 'png';
 tau_er = 1;
 tau_ed = 3;
 tau_ir = 1;
@@ -24,13 +24,13 @@ draw = true;
 %draw = false;
 ppp = true;
 %ppp = false;
-npool = 4;
+npool = 6;
 loadData = false;
 singleStored = false;
 %loadData = true;
 %v0 = -0.4:0.8:1.2;
-%v0 = [-0.3,0,0.2,0.5,0.8];
-v0 = [-0.3,0,0.5];
+v0 = [-0.3,0,0.2,0.5,0.8];
+%v0 = [-0.3,0,0.5];
 fE = linspace(0.125,0.25,4) * 2e-5;
 fE = fE(1:2);
 %fI = (0.25:0.25:1.0) * 1e-5;

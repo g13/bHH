@@ -11,11 +11,11 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     set(0,'DefaultTextFontSize',FontSize-2);
     %tstep = 1/32;
     tstep = 1/10;
-    %dur = 300; % bilinear k length
-    dur = 100; % bilinear k length
+    dur = 300; % bilinear k length
+    %dur = 100; % bilinear k length
     dur0 = dur; % linear length
-    %dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
-    dtRange = [0,4,12,22,26,60];
+    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
+    %dtRange = [0,4,12,22,26,60];
     ndt = length(dtRange);
     %idtCase = [ndt-3,round(ndt/2),3];
     idtCase = [1,round(ndt/2)];
@@ -184,7 +184,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 fname = ['sPSP','-',name,'-',num2str(i)];
                 printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
             end
-            [extraEPSP,extraIPSP,edtRange,nedt] = get_extraPSP(vleakage,silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange)
+            [extraEPSP,extraIPSP,edtRange,nedt] = get_extraPSP(vleakage,silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange);
             toc;
             save(['../library/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','extraEPSP','extraIPSP','edtRange','nedt','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
         else
