@@ -14,11 +14,10 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     dur = 300; % bilinear k length
     %dur = 100; % bilinear k length
     dur0 = dur; % linear length
-    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,190];
+    dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,170,230];
     %dtRange = [0,4,12,22,26,60];
     ndt = length(dtRange);
-    %idtCase = [ndt-3,round(ndt/2),3];
-    idtCase = [1,round(ndt/2)];
+    idtCase = [1,round(ndt/2),ndt-1];
     if nargin < 13
         singleStored = false;
         if nargin < 12
@@ -107,7 +106,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     for idt=2:ndt
         assert((dur - dtRange(idt))>=(dtRange(ndt-1)-dtRange(idt-1)));
     end
-    %idtCase = [1,round(ndt/2),ndt-1];
     ndtplot = length(idtCase);
 
     seed = 89749+1;
@@ -394,7 +392,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
         toc;
         disp('kV generated');
-        save(['../library/',name,'-',num2str(i),'th'],'kV','kEE','kIE','kEI','kII','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','ndt','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','tstep','dir','nt0','E_tmax','I_tmax');
+        save(['../library/',name,'-',num2str(i),'th'],'kV','kEE','kIE','kEI','kII','tp0','vleakage','sEPSP','sIPSP','dur','vRange','fE','fI','nE','nI','ndt','i','dtRange','sEPSP0','sIPSP0','vleakage0','ei','tstep','dir','nt0','E_tmax','I_tmax','-v7.3');
         if draw
             assert(idtplot==ndtplot);
         end
@@ -1270,7 +1268,9 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             yl(1) = max(-1.5,yl(1)-0.1*abs(yl(1)));
             yl(2) = max(k(pick,jdt,iv0));
             yl(2) = min(1.5,yl(2)+0.1*abs(yl(2)));
-            ax(1).YLim = yl;
+            if yl(2) > yl(1)
+                ax(1).YLim = yl;
+            end
             ax(1).YTickMode = 'auto';
             ax(1).YLabel.String = 'PSP mV';
             ax(2).YColor = 'b';
