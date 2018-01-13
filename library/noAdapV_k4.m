@@ -92,11 +92,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     ei = para.ei(i);
     dir = [name,'-',theme,'-',model];
     name = dir;
-    if exist(['./',dir])~=7
-        mkdir(dir);
-    else
-        rmdir(dir,'s');
-    end
 %     loadData = false;
     testEE = true;
     testII = true;
@@ -159,13 +154,16 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     % 1 2 3
     % E I EI
     diri = [dir,'/',num2str(i)];
-    if ~exist(['./',diri],'dir')
-        mkdir(diri);
-    else
-        rmdir(diri,'s');
-    end
     vRange = para.vRest(i) + (para.vT(i)-para.vRest(i))*v0;
     if ~loadData
+        if exist(['./',dir])~=7
+            mkdir(dir);
+        end
+        if ~exist(['./',diri],'dir')
+            mkdir(diri);
+        else
+            rmdir(diri,'s');
+        end
         if ~singleStored
             tic;
             [sEPSP,sIPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange);
