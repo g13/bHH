@@ -407,10 +407,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
     end
     if multipleInput
-        kVEE = squeeze(kEE(:,1,:,:));
-        kVII = squeeze(kII(:,1,:,:));
-        kVEI = squeeze(kEI(:,1,:,:));
-        kVIE = squeeze(kIE(:,1,:,:));
         disp('testing multiple inputs');
         % uniform K
             %>2 input
@@ -610,7 +606,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                                 hDebug = debugPreplot(hDebug,t,vpred);
                             end
                             [vpred, bEI{iiE,iI},tEI(:,iiE,iI)] = pred(vpred,iiE,iI,squeeze(sEPSP(:,pfE(iiE),:,:)),vI,...
-                                                                      tEs,tEe,tEl,tIs,kVEI,...
+                                                                      tEs,tEe,tEl,tIs,kEI,...
                                                                       vRange,nv0,ndt,idtRange);
                             if debug && rule(iiE,0,0,iI)
                                 hDebug = plotDebug(hDebug,t,v,vpred,iiE,iI,...
@@ -629,7 +625,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                                 hDebug = debugPreplot(hDebug,t,vpred);
                             end
                             [vpred, bII{iiI,iI},tII(:,iiI,iI)] = pred(vpred,iiI,iI,squeeze(sIPSP(:,pfI(iiI),:,:)),vI,...
-                                                                      tIs,tIe,tIl,tIs,kVII,...
+                                                                      tIs,tIe,tIl,tIs,kII,...
                                                                       vRange,nv0,ndt,idtRange);
                             if debug && rule(0,iiI,0,iI)
                                 hDebug = plotDebug(hDebug,t,v,vpred,iiI,iI,...
@@ -659,7 +655,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                             hDebug = debugPreplot(hDebug,t,vpred);
                         end
                         [vpred, bIE{iiI,iE},tIE(:,iiI,iE)] = pred(vpred,iiI,iE,squeeze(sIPSP(:,pfI(iiI),:,:)),vE,...
-                                                                  tIs,tIe,tIl,tEs,kVIE,...
+                                                                  tIs,tIe,tIl,tEs,kIE,...
                                                                   vRange,nv0,ndt,idtRange);
                         if debug && rule(0,iiI,iE,0)
                             hDebug = plotDebug(hDebug,t,v,vpred,iiI,iE,...
@@ -678,7 +674,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                             hDebug = debugPreplot(hDebug,t,vpred);
                         end
                         [vpred, bEE{iiE,iE},tEE(:,iiE,iE)] = pred(vpred,iiE,iE,squeeze(sEPSP(:,pfE(iiE),:,:)),vE,...
-                                                                  tEs,tEe,tEl,tEs,kVEE,...
+                                                                  tEs,tEe,tEl,tEs,kEE,...
                                                                   vRange,nv0,ndt,idtRange);
                         if debug && rule(iiE,0,iE,0)
                             hDebug = plotDebug(hDebug,t,v,vpred,iiE,iE,...
@@ -705,7 +701,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                                 hDebug = debugPreplot(hDebug,t,vpred);
                             end
                             [vpred,bEI{iiE,iI},tEI(:,iiE,iI)] = pred(vpred,iiE,iI,squeeze(sEPSP(:,pfE(iiE),:,:)),vI,...
-                                                                     tEs,tEe,tEl,tIs,kVEI,...
+                                                                     tEs,tEe,tEl,tIs,kEI,...
                                                                      vRange,nv0,ndt,idtRange);
                             if debug && rule(iiE,0,0,iI)
                                 hDebug = plotDebug(hDebug,t,v,vpred,iiE,iI,...
@@ -724,7 +720,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                                 hDebug = debugPreplot(hDebug,t,vpred);
                             end
                             [vpred,bII{iiI,iI},tII(:,iiI,iI)] = pred(vpred,iiI,iI,squeeze(sIPSP(:,pfI(iiI),:,:)),vI,...
-                                                                     tIs,tIe,tIl,tIs,kVII,...
+                                                                     tIs,tIe,tIl,tIs,kII,...
                                                                      vRange,nv0,ndt,idtRange);
                             if debug && rule(0,iiI,0,iI)
                                 hDebug = plotDebug(hDebug,t,v,vpred,iiI,iI,...
@@ -850,7 +846,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         ylabel('err mV');
         xlim([t(1),t(end)]);
         
-        printpic(hM,diri,fname,picformat,printDriver,dpi,pos0);
+        printpic(hM,diri,fname,picformat,printDriver,dpi,pos0,false);
     end
 end
 function [EPSP,IPSP,dtRange,ndt] = get_extraPSP(vleakage,silico,tstep,vRange,fIRange,fERange,para,bool,name,dur,i,v0id,dtRange0)
@@ -1342,7 +1338,10 @@ function h = drawExample(pv0,vadd0,vDoublet0,vleakage0,t,iidt,tp0,k0,n,vRange,vR
         inv0 = inv0 + 1;
     end
 end
-function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
+function printpic(h,dir,fname,picformat,printDriver,dpi,pos,closePic)
+    if nargin < 8
+        closePic = true;
+    end
     if ~isempty(picformat)
         set(h,'PaperUnits', 'inches','PaperSize',pos(1:2));
         set(h,'PaperPosition',pos(3:6));
@@ -1358,7 +1357,9 @@ function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
             print(h,[dir,'/',fname,'.',picformat],printDriver,'-loose',dpi);
         end
         saveas(h,[dir,'/',fname,'.fig']);
-        close(h);
+        if closePic
+            close(h);
+        end
     end
 end
 function [vpred, b, t] = pred(vpred,i1,i2,sPSP1,v2,...
@@ -1385,21 +1386,21 @@ function [kVtmp, vtmp] = interpKV(k,sPSP,vTarget,tTarget,v,nv0,idtRange,ndt,lt)
     t1 = (idtRange(fdt+1)) + (0:lt);
     rt = (tTarget-idtRange(fdt))/(idtRange(fdt+1)-idtRange(fdt));
     if isempty(fv) % out of lower bound exterpolation
-        k0 = k(t0,fdt,1);
-        kVtmp = k0 + (vTarget-v(1))/(v(1)-v(2)) * (k0-k(t0,fdt,2)) + rt * (k(t1,fdt+1,1)-k0);
+        k0 = k(t0,fdt,fdt,1);
+        kVtmp = k0 + (vTarget-v(1))/(v(1)-v(2)) * (k0-k(t0,fdt,fdt,2)) + rt * (k(t1,fdt+1,fdt+1,1)-k0);
         sPSP0 = sPSP(t0,fdt,1);
         vtmp = sPSP0 + (vTarget-v(1))/(v(1)-v(2)) * (sPSP0-sPSP(t0,fdt,2)) + rt * (sPSP(t1,fdt+1,1)-sPSP0);
     else
-        k0 = k(t0,fdt,fv);
+        k0 = k(t0,fdt,fdt,fv);
         sPSP0 = sPSP(t0,fdt,fv);
         if fv == nv0  % out of upper bound exterpolation
-            kVtmp = k0 + (vTarget-v(fv))/(v(fv)-v(fv-1)) * (k0-k(t0,fdt,fv-1));
+            kVtmp = k0 + (vTarget-v(fv))/(v(fv)-v(fv-1)) * (k0-k(t0,fdt,fdt,fv-1));
             vtmp = sPSP0 + (vTarget-v(fv))/(v(fv)-v(fv-1)) * (sPSP0-sPSP(t0,fdt,fv-1));
         else
-            kVtmp = k0 + (vTarget-v(fv))/(v(fv+1)-v(fv)) * (k(t0,fdt,fv+1)-k0);
+            kVtmp = k0 + (vTarget-v(fv))/(v(fv+1)-v(fv)) * (k(t0,fdt,fdt,fv+1)-k0);
             vtmp = sPSP0 + (vTarget-v(fv))/(v(fv+1)-v(fv)) * (sPSP(t0,fdt,fv+1)-sPSP0);
         end
-        kVtmp = kVtmp + rt * (k(t1,fdt+1,fv)-k0);
+        kVtmp = kVtmp + rt * (k(t1,fdt+1,fdt+1,fv)-k0);
         vtmp = vtmp + rt * (sPSP(t1,fdt+1,fv)-sPSP0);
     end
 end
