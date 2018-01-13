@@ -157,12 +157,12 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     vRange = para.vRest(i) + (para.vT(i)-para.vRest(i))*v0;
     if ~loadData
         if exist(['./',dir])~=7
+            disp(['making directory ',dir]);
             mkdir(dir);
         end
         if ~exist(['./',diri],'dir')
+            disp(['making directory ',diri]);
             mkdir(diri);
-        else
-            rmdir(diri,'s');
         end
         if ~singleStored
             tic;
@@ -851,9 +851,9 @@ function [EPSP,IPSP,dtRange,ndt] = get_extraPSP(vleakage,silico,tstep,vRange,fIR
      
     ndt0 = length(dtRange0);
     dtRange = [];
-    for i=1:ndt0
-        for j=1:i-1
-            new_dt = dtRange0(i) - dtRange0(j);
+    for idt=1:ndt0
+        for jdt=1:idt-1
+            new_dt = dtRange0(idt) - dtRange0(jdt);
             if sum((new_dt - dtRange) == 0) == 0 && sum((new_dt - dtRange0) == 0) == 0
                 dtRange = [dtRange, new_dt];
             end
@@ -978,7 +978,7 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fIR
         for idt = 1:ndt
             for it = 1:nt
                 for iF = 1:nI
-                    assert(IPSP(it,iF,idt,iv0)<=0);
+                    assert(IPSP(it,iF,idt,iv0)<30);
                 end
             end
         end
