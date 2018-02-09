@@ -5,13 +5,14 @@ function p = read_cfg(cfgFn)
         p = 0;
         return
     end
-    tline = fgetl(fid);
+    tline = fgetl(fid)
     if length(tline) == 0
-        tline(1) = '#';
+        tline = '#';
     end
     pair = cell(100,1);
     nl = 1;
     while tline(1) ~= -1
+        tline = strtrim(tline);
         if tline(1) ~= '#'
             element = strtrim(strsplit(tline,'='));
             pair{nl} = element{1};
@@ -44,11 +45,15 @@ function p = read_cfg(cfgFn)
                 nl = nl +2;
             end
         end
-        tline = fgetl(fid);
+        tline = fgetl(fid)
         if length(tline) == 0
-            tline(1) = '#';
+            tline = '#';
         end
     end
     pair = pair(1:nl-1);
-    p = struct(pair{:});
+    if ~isempty(pair)
+        p = struct(pair{:});
+    else
+        p = struct([]);
+    end
 end

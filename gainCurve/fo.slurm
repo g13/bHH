@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=16G
+#SBATCH --mem=40G
 #SBATCH --time=00:10:00
 #SBATCH -o fo_%J.out
 #SBATCH --job-name=fO
