@@ -4,9 +4,11 @@ dur =   [   300      ,    450     ,      150      ,       700           ,      1
 dtRange0 = [0,2,4,8,12,18,22,24,26,30,60,110,170,230];
 dur0 = 300;
 dtRatio = dtRange0./dur0;
+tstep = 1/32;
 for iname = 1:length(names) 
     name = names{iname};
     dtRange = dtRatio * dur(iname);
+    dtRange = round(dtRange/tstep)*tstep;
     % name 
         % 'RS_exc_Rat'
         % 'RS_inh_Rat'
@@ -46,5 +48,5 @@ for iname = 1:length(names)
     avoidSpike = true;
     %v0 = 0.0:0.1:0.2;
     %noAdapV(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,avoidSpike);
-    noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored,dur(iname),dtRange);
+    noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored,dur(iname),dtRange,tstep);
 end

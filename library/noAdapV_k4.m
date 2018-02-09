@@ -1,4 +1,4 @@
-function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored, dur, dtRange)
+function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored, dur, dtRange, tstep)
     global nvplot ndtplot iv0Case idtCase
     msgID = 'MATLAB:rankDeficientMatrix';
     warning('off',msgID);
@@ -10,38 +10,40 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     set(0,'DefaultAxesFontSize',FontSize);
     set(0,'DefaultTextFontSize',FontSize-2);
     %tstep = 1/32;
-    tstep = 1/32;
     %dur = 100; % bilinear k length
     dur0 = dur; % linear length
     %dtRange = [0,4,12,22,26,60];
     ndt = length(dtRange);
     idtCase = [1,round(ndt/2),ndt-1];
-    if nargin < 15
-        dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,170,230];
-        if nargin < 14
-            dur = 300;
-            if nargin < 13
-                singleStored = false;
-                if nargin < 12
-                    fI = linspace(0.5,2.0,4) * 1e-5;
-                    if nargin < 11
-                        fE = linspace(0.125,0.5,4) * 1e-5;
-                        if nargin < 10
-                            v0 = -0.4:0.1:1.2;
-                            if nargin < 9
-                                npool = 1;
-                                if nargin < 8
-                                    loadData = true;
-                                    if nargin < 7
-                                        ppp = false;
-                                        if nargin < 6
-                                            draw = false;
-                                            if nargin < 5
-                                                picformat = '';
-                                                if nargin < 4
-                                                    model = 'HH';
-                                                    if nargin < 3
-                                                        pick = 1;
+    if nargin < 16
+        tstep = 1.0/32;
+        if nargin < 15
+            dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,170,230];
+            if nargin < 14
+                dur = 300;
+                if nargin < 13
+                    singleStored = false;
+                    if nargin < 12
+                        fI = linspace(0.5,2.0,4) * 1e-5;
+                        if nargin < 11
+                            fE = linspace(0.125,0.5,4) * 1e-5;
+                            if nargin < 10
+                                v0 = -0.4:0.1:1.2;
+                                if nargin < 9
+                                    npool = 1;
+                                    if nargin < 8
+                                        loadData = true;
+                                        if nargin < 7
+                                            ppp = false;
+                                            if nargin < 6
+                                                draw = false;
+                                                if nargin < 5
+                                                    picformat = '';
+                                                    if nargin < 4
+                                                        model = 'HH';
+                                                        if nargin < 3
+                                                            pick = 1;
+                                                        end
                                                     end
                                                 end
                                             end
