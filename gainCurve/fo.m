@@ -27,7 +27,9 @@ function fo(picformat,cfgFn)
         printDriver = '';
     end
     p = read_cfg(cfgFn);
-    type = 'RS_exc_Rat';
+    parts = strsplit(pwd, '/');
+    parentfdr = parts{end-1};
+    outputName = [outputName,'-',parentfdr];
     ith = 1;
     run_t = 1000;
     load(p.lib_file,'dtRange','vRange','dur','kEI','sEPSP0','sEPSP','fE','fI','nE','ndt');
@@ -199,7 +201,7 @@ function fo(picformat,cfgFn)
                 text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
             end
         end
-        fname =[p.theme,'-trial',num2str(j)];
+        fname =[outputName,'-trial',num2str(j)];
         printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
     end
     fclose(DataFid);
@@ -219,9 +221,9 @@ function fo(picformat,cfgFn)
     xlabel('E+I input rate');
     ylabel('error per timestep');
     legend({'linear','bilinear'});
-    fname =[p.theme,'-err_rate'];
+    fname =[outputName,'-err_rate'];
     printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
-    save([p.theme,'-Raster.mat'],'rasterData');
+    save([outputName,'-Raster.mat'],'rasterData');
 end
 function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
     if ~isempty(picformat)

@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=16
 ##SBATCH --mem=40G
 #SBATCH --mem=40G
-#SBATCH --time=8:00:00
+#SBATCH --time=12:00:00
 ##SBATCH -a 1-1
 ##SBATCH -o ReR._%A_%a.out
 #SBATCH -o sL_%J.out
