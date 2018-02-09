@@ -28,8 +28,8 @@ function fo(picformat,cfgFn)
     end
     p = read_cfg(cfgFn);
     parts = strsplit(pwd, '/');
-    parentfdr = parts{end-1};
-    outputName = [outputName,'-',parentfdr];
+    parentfdr = parts{end};
+    outputName = [p.theme,'-',parentfdr];
     ith = 1;
     run_t = 1000;
     load(p.lib_file,'dtRange','vRange','dur','kEI','sEPSP0','sEPSP','fE','fI','nE','ndt');

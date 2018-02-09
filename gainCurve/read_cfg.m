@@ -6,7 +6,10 @@ function p = read_cfg(cfgFn)
         return
     end
     tline = fgetl(fid);
-    pair = cell(50,1);
+    if length(tline) == 0
+        tline(1) = '#';
+    end
+    pair = cell(100,1);
     nl = 1;
     while tline(1) ~= -1
         if tline(1) ~= '#'
@@ -42,6 +45,9 @@ function p = read_cfg(cfgFn)
             end
         end
         tline = fgetl(fid);
+        if length(tline) == 0
+            tline(1) = '#';
+        end
     end
     pair = pair(1:nl-1);
     p = struct(pair{:});
