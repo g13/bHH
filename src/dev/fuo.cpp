@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     string lib_file, para_file;
     mxArray *para;
     double cpu_t_sim, cpu_t_bilinear, cpu_t_linear;
-    double rLinear;
+    double rdHH,rgHH;
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
     struct timespec tpS, tpE;
     unsigned int ith, nt;
@@ -75,7 +75,8 @@ int main(int argc, char **argv)
 		("run_t,t", po::value<double>(&run_t), "sim time")
         ("vinit,v", po::value<unsigned int>(&vinit), "vinit")
         ("tref",po::value<double>(&tref),"refractory period")
-        ("rLinear",po::value<double>(&rLinear),"linear->HH threshold")
+        ("rdHH",po::value<double>(&rdHH),"drop HH threshold")
+        ("rgHH",po::value<double>(&rgHH),"go HH threshold")
         ("afterCrossBehavior",po::value<int>(&afterCrossBehavior)->default_value(2)," 0:skip, 1:linear, 2:bilinear")
         ("spikeShape",po::value<bool>(&spikeShape)->default_value(true)," if false, crossing is spiking")
         ("kVStyle",po::value<bool>(&kVStyle)->default_value(true)," if false, crossing is spiking")
@@ -162,12 +163,10 @@ int main(int argc, char **argv)
     rI = vm["rI"].as<vector<double>>();
     int rEl = rE.size();
     int rIl = rI.size();
-    double rHH = 1.0;
-    double rBilinear = rLinear;
-    double vCrossl = vRest + (vT -vRest);
-    double vBackl = vRest + (vT -vRest)*rLinear;
-    double vCrossb = vRest + (vT -vRest);
-    double vBackb = vRest + (vT -vRest)*rBilinear;
+    double vCrossl = vRest + (vT -vRest)*rgHH;
+    double vBackl = vRest + (vT -vRest)*rdHH;
+    double vCrossb = vRest + (vT -vRest)*rgHH;
+    double vBackb = vRest + (vT -vRest)*rdHH;
     cout << " linear -> HH  " << vCrossl << endl;
     cout << " HH -> linear " << vBackl << endl;
     size plchldr_size0,plchldr_size1;
@@ -231,7 +230,7 @@ int main(int argc, char **argv)
         n.push_back(n_inf(neuroLib.vRange[vinit],vT));
         h.push_back(h_inf(neuroLib.vRange[vinit],vT));
         unsigned int nc = 0;
-        neuron.vThres = vRest + 2*(vT -vRest)*rHH;
+        neuron.vThres = vRest + 2*(vT -vRest);
         cout << "HH start" << endl;
         plchldr_size1 = 0;
         nc = RK4_HH(simV,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim,false,0,plchldr_size0,plchldr_size1,plchldr_double);
@@ -244,7 +243,7 @@ int main(int argc, char **argv)
         nc = 0;
         clock_gettime(clk_id,&tpS);
         cout << " bilinear start " << endl;
-        neuron.vThres = vRest + 2*(vT -vRest)*rHH;
+        neuron.vThres = vRest + 2*(vT -vRest);
         nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
         clock_gettime(clk_id,&tpE);
         cpu_t_bilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;

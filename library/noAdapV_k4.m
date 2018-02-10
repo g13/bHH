@@ -13,12 +13,14 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     %dur = 100; % bilinear k length
     dur0 = dur; % linear length
     %dtRange = [0,4,12,22,26,60];
+    explore = false;
     ndt = length(dtRange);
-    idtCase = [1,round(ndt/2),ndt-1];
+    %idtCase = [1,round(ndt/2),max(3,ndt-1)];
+    idtCase = [1,2,3];
     if nargin < 16
         tstep = 1.0/32;
         if nargin < 15
-            dtRange = [0,2,4,8,12,18,22,24,26,30,60,110,170,230];
+            dtRange = -1;
             if nargin < 14
                 dur = 300;
                 if nargin < 13
@@ -172,23 +174,19 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             tic;
             [sEPSP,sIPSP,E_tmax,I_tmax,vleakage] = sPSP_check(silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange);
             toc;
-            tic;
-            if dur==dur0
-                sEPSP0 = squeeze(sEPSP(:,:,1,:));
-                sIPSP0 = squeeze(sIPSP(:,:,1,:));
-                vleakage0 = squeeze(vleakage(:,1,:));
-                h = plotsPSP0(sEPSP0,sIPSP0,vleakage0,fE,fI,nv0,dur,nt,v0id);
-            else
-                [h,sEPSP0,sIPSP0,vleakage0] = sPSP0_check(silico,tstep,vRange,fI',fE',para,bool,name,dur0,i,v0id);
-            end
+            sEPSP0 = squeeze(sEPSP(:,:,1,:));
+            sIPSP0 = squeeze(sIPSP(:,:,1,:));
+            vleakage0 = squeeze(vleakage(:,1,:));
+            h = plotsPSP0(sEPSP0,sIPSP0,vleakage0,fE,fI,nv0,dur,nt,v0id);
             delete([diri,'/*']);
             if draw
-                fname = ['sPSP','-',name,'-',num2str(i)];
+                fname = ['sPSP0','-',name,'-',num2str(i)];
                 printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
             end
             [extraEPSP,extraIPSP,edtRange,nedt] = get_extraPSP(vleakage,silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange);
+
             toc;
-            save(['../library/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','extraEPSP','extraIPSP','edtRange','nedt','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0');
+            save(['../library/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','extraEPSP','extraIPSP','edtRange','nedt','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0','dtRange','ndt');
         else
             load(['../library/single-',name,'-',num2str(i),'th.mat']);
             delete([diri,'/*']);
@@ -256,10 +254,63 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             end
             title('norm. IPSP, hue v0, satur f');
             xlim([0,dur]);
+            fname = ['nsPSP0','-',name,'-',num2str(i)];
+            printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
+
+            h = figure;
+            maxsE = repmat(max(abs(squeeze(sEPSP(:,:,1,:)))),[nt0,1]);
+            maxsI = repmat(max(abs(squeeze(sIPSP(:,:,1,:)))),[nt0,1]);
+            for idt=1:ndt
+                sE = abs(squeeze(sEPSP(:,:,idt,:)));
+                sI = abs(squeeze(sIPSP(:,:,idt,:)));
+                nsEPSP = sE./maxsE;
+                nsIPSP = sI./maxsI;
+                subplot(2,2,1)
+                hold on
+                c1 = linspace(0,5/6,nv0);
+                c2 = linspace(0.3,1,nE)';
+                c3 = 0.5+0.3*(idt/ndt);
+                for iF = 1:nE
+                    for iv0 = 1:nv0
+                        plot(t0,squeeze(nsEPSP(:,iF,iv0)),'Color',hsv2rgb([c1(iv0),c2(iF),c3]));
+                    end
+                end
+                title('norm. EPSP, hue v0, satur f');
+                xlim([0,dur]);
+                subplot(2,2,3)
+                hold on
+                for iF = 1:nE
+                    for iv0 = 1:nv0
+                        semilogy(dtRange(idt),log10(max(squeeze(sE(:,iF,iv0)))),'*','Color',hsv2rgb([c1(iv0),c2(iF),c3]));
+                    end
+                end
+                xlim([0,dur]);
+                subplot(2,2,2)
+                hold on
+                c2 = linspace(0.3,1,nI)';
+                for iF = 1:nI
+                    for iv0 = 1:nv0
+                        plot(t0,squeeze(nsIPSP(:,iF,iv0)),'Color',hsv2rgb([c1(iv0),c2(iF),c3]));
+                    end
+                end
+                title('norm. IPSP, hue v0, satur f');
+                xlim([0,dur]);
+                subplot(2,2,4);
+                hold on
+                for iF = 1:nI
+                    for iv0 = 1:nv0
+                        semilogy(dtRange(idt),log10(max(squeeze(sI(:,iF,iv0)))),'*','Color',hsv2rgb([c1(iv0),c2(iF),c3]));
+                    end
+                end
+                xlim([0,dur]);
+            end
             fname = ['nsPSP','-',name,'-',num2str(i)];
             printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
         end
         %
+        if explore
+            return
+        end
         
         % taking k at max |response|
 %         [~,tQE] = max(sEPSP);
@@ -328,7 +379,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 end
                 if pp0
                     if length(h) > 0
-                        fname = [num2str(idt),'dt-EE'];
+                        fname = [h.FileName,'-EE'];
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-EE'];
@@ -348,7 +399,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 end
                 if pp0
                     if length(h) > 0
-                        fname = [num2str(idt),'dt-II'];
+                        fname = [h.FileName,'-II'];
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-II'];
@@ -368,7 +419,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 end
                 if pp0
                     if length(h) > 0
-                        fname = [num2str(idt),'dt-EI'];
+                        fname = [h.FileName,'-EI'];
                         printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
                     end
                     fname = [num2str(idt),'k-EI'];
@@ -851,7 +902,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         printpic(hM,diri,fname,picformat,printDriver,dpi,pos0,false);
     end
 end
-function [EPSP,IPSP,dtRange,ndt] = get_extraPSP(vleakage,silico,tstep,vRange,fIRange,fERange,para,bool,name,dur,i,v0id,dtRange0)
+function [EPSP,IPSP,dtRange,ndt,h] = get_extraPSP(vleakage,silico,tstep,vRange,fIRange,fERange,para,bool,name,dur,i,v0id,dtRange0)
      
     ndt0 = length(dtRange0);
     dtRange = [];
@@ -886,7 +937,7 @@ function [EPSP,IPSP,dtRange,ndt] = get_extraPSP(vleakage,silico,tstep,vRange,fIR
         para.f_I = para.tE;
         para.tI = para.tE;
 
-        for idt = 1:ndt
+        parfor idt = 1:ndt
             param = para;
             param.vtime = dtRange(idt);
             tmpE = silico(name,v0,param,bool,tstep,dur,i,false);
@@ -905,11 +956,30 @@ function [EPSP,IPSP,dtRange,ndt] = get_extraPSP(vleakage,silico,tstep,vRange,fIR
         parfor idt = 1:ndt
             param = para;
             param.vtime = dtRange(idt);
-            tmpI = silico(name,v0,param,bool,tstep,dur,i,false);
-            tmpIv = squeeze(tmpI(1,:,:)) - repmat(vleakage(:,1,iv0),[1,nI]);
+            tmpI = silico(name,v0,param,bool,tstep,dur,i,false); 
+            tmpLeak = [zeros(idtRange(idt)-1,1);vleakage(1:(nt-idtRange(idt)+1),1,iv0)];
+            tmpIv = squeeze(tmpI(1,:,:)) - repmat(tmpLeak,[1,nE]);
             [~,I_tmax(:,idt,iv0)] = min(tmpIv);
             IPSP(:,:,idt,iv0) = tmpIv;
         end
+    end
+    s = [0.1,1.0];
+    h = figure;
+    t = linspace(0,dur,nt);
+    for idt = 1:ndt
+        tpick = idtRange(idt):nt;
+        subplot(1,2,1)
+        hold on
+        v = 1.0-0.5*(idt/ndt);
+        plotSinglePSP(0,s,v,fERange,t(tpick),squeeze(EPSP(tpick,:,idt,:)),nE,nv0,v0id);
+        xlabel('f');
+        ylabel('t');
+        zlabel('EPSP (mV)');
+        subplot(1,2,2);
+        plotSinglePSP(2/3,s,v,fIRange,t(tpick),squeeze(IPSP(tpick,:,idt,:)),nI,nv0,v0id);
+        xlabel('f');
+        ylabel('t');
+        zlabel('IPSP (mV)');
     end
     disp('extra sPSP complete');
 end
@@ -1032,32 +1102,7 @@ function [h,EPSP,IPSP,vleakage] = sPSP0_check(silico,tstep,vRange,fIRange,fERang
        IPSP(:,:,iv0) = squeeze(tmpI(1,:,:)) - repmat(vleakage(:,iv0),[1,nI]);
     end
     disp('sPSP0 complete');
-    h = figure;
-    s = [0.1,1.0];
-    v = 1.0;
-    t = linspace(0,dur,nt);
-    subplot(2,2,2);
-    plotSinglePSP(0,s,v,fERange,t,EPSP,nE,nv0,v0id);
-    xlabel('f');
-    ylabel('t');
-    zlabel('EPSP (mV)');
-    subplot(2,2,4);
-    plotSinglePSP(2/3,s,v,fIRange,t,IPSP,nI,nv0,v0id);
-    xlabel('f');
-    ylabel('t');
-    zlabel('IPSP (mV)');
-    c = zeros(nv0,3);
-    c(:,3) = linspace(0.7,0,nv0)';
-    c = hsv2rgb(c);
-    t = 0:tstep:dur;
-    subplot(1,2,1);
-    hold on
-    for iv0 = 1:nv0
-        plot(t,squeeze(vleakage),'Color',c(iv0,:));
-    end
-    xlabel('t');
-    ylabel('Membrane Potential (mV)');
-    title('leakage');
+    h = plotsPSP0(EPSP,IPSP,vleakage,fERange,fIRange,nv0,dur,nt,v0id);
 end
 function h = plotsPSP0(EPSP,IPSP,vleakage,fERange,fIRange,nv0,dur,nt,v0id)
     nE = length(fERange);
@@ -1252,11 +1297,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
             h0.FileName = [num2str(jdt), 'th dt'];
             title([num2str(iv0),'th v, ',h0.FileName]);
             hold on
-            if jdt == ndt
-                pick = jjdt:nt;
-            else
-                pick = jjdt:idtRange(ndt);
-            end
+            pick = dtOI;
             plot(t(pick),v1V(range(1),pick,iv0),':r');
             plot(t(pick),v2V(range(i2),pick,iv0),':b');
             plot(t(pick),vadd(range(i2),pick,iv0),':k');
@@ -1278,7 +1319,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0] = doubleCheck(silico,name,para,v0,boo
                 ax(1).YLim = yl;
             end
             ax(1).YTickMode = 'auto';
-            ax(1).YLabel.String = 'PSP mV';
+            ax(1).YLabel.String = 'k';
             ax(2).YColor = 'b';
             ax(2).YLim = [0,1.1];
             ax(2).YTickMode = 'auto';
