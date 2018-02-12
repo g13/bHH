@@ -2,10 +2,9 @@
 #SBATCH -p serial
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-##SBATCH --mem=40G
-#SBATCH --mem=40G
-#SBATCH --time=12:00:00
+#SBATCH --cpus-per-task=17
+#SBATCH --mem=60G
+#SBATCH --time=4:00:00
 ##SBATCH -a 1-1
 ##SBATCH -o ReR._%A_%a.out
 #SBATCH -o sL_%J.out

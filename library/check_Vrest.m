@@ -154,23 +154,37 @@ function check_Vrest(model, noAdap)
     n
     para.fCurrent = 0;
     tstep = 0.05;
-    dur = 10000;
+    dur = 1000;
     v0 = para.vLeak;
-    y=silico(name,v0,para,bool,n,tstep,dur);
-    nstep = round(dur/tstep)+1;
-    vRest = reshape(y(1,end,:),[n,1]);
-    if noAdap
-        save(['../library/vRest-noAdap-',model,'.mat'],'vRest');
-    else
-        save(['../library/vRest-',model,'.mat'],'vRest');
+    except = [44];
+    qc = 0
+    while true
+        y=silico(name,v0,para,bool,n,tstep,dur);
+        nstep = round(dur/tstep)+1;
+        vRest = reshape(y(1,end,:),[n,1]);
+        %%
+        vRestMinus10ms = reshape(y(1,nstep-round(10/tstep),:),[n,1]);
+        % plot(0:tstep:dur,reshape(y(1,:,n),[1,nstep]));
+        diff = abs(vRest-vRestMinus10ms);
+        diff'
+        [~,mid] = max(diff)
+        sumdiff = sum(abs(vRest-vRestMinus10ms))-sum(abs(vRest(except)-vRestMinus10ms(except)))
+        if sumdiff < 1e-14
+            break;
+        else
+            v0 = vRest;
+            qc = qc + 1
+        end
     end
-    %%
-    vRestMinus10ms = reshape(y(1,nstep-round(10/tstep),:),[n,1]);
     h = figure;
     subplot(2,1,1);
     plot(abs(vRest-vRestMinus10ms));
     subplot(2,1,2);
     plot(0:tstep:dur,reshape(y(1,:,:),[nstep,n]));
-    % plot(0:tstep:dur,reshape(y(1,:,n),[1,nstep]));
-    
+    saveas(h,'../library/vRest.fig');
+    if noAdap
+        save(['../library/vRest-noAdap-',model,'.mat'],'vRest');
+    else
+        save(['../library/vRest-',model,'.mat'],'vRest');
+    end
 end
