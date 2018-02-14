@@ -6,13 +6,13 @@ dtRange0 = {[0,2,4]};
 %tstep = 1/32;
 tstep = 1/10;
 %for iname = 4:5
-for iname = 6:6
+for iname = 5:5
 %for iname = 1:1
     name = names{iname};
     %dtRange = dtRange0{iname};
     %dur = dur{iname}
-    dtRange = 0;
-    dur = 0;
+    dtRange = -14;
+    dur = -2400;
     % name 
         % 'RS_exc_Rat'
         % 'RS_inh_Rat'
@@ -24,7 +24,7 @@ for iname = 6:6
         % 'LTS_associa_Cat'
         % 'LTS_somato_Rat' fires at resting potential
         % 'TR_somato_Rat'
-    theme = 'explore';
+    theme = 'check';
     pick = 1;
     model = 'HH';
     picformat = 'png';
@@ -41,7 +41,7 @@ for iname = 6:6
     %loadData = true;
     singleStored = false;
     %singleStored = true;
-    loadData = true;
+    loadData = false;
     v0 = -0.3:0.15:1.2;
     %v0 = [-0.4,0,0.4,1.2];
     %v0 = [-0.3,0,0.5,1.0];

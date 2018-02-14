@@ -149,9 +149,9 @@ int main(int argc, char **argv)
     double rHH = 1.0;
     double rLinear = 0.8;
     double rBilinear = rLinear;
-    double vCrossl = vRest + (vT -vRest);
+    double vCrossl = vRest + (vT -vRest)*rHH;
     double vBackl = vRest + (vT -vRest)*rLinear;
-    double vCrossb = vRest + (vT -vRest);
+    double vCrossb = vRest + (vT -vRest)*rHH;
     double vBackb = vRest + (vT -vRest)*rBilinear;
     cout << " linear -> HH  " << vCrossl << endl;
     cout << " HH -> linear " << vBackl << endl;

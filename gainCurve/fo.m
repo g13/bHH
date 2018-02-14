@@ -155,9 +155,11 @@ function fo(picformat,cfgFn)
         ylabel('error per timestep mV');
         subplot(2,2,4);
         dliV = liV - simV;
+        sum(dliV)
         plot(t,dliV);
         hold on
         dbiV = biV - simV;
+        sum(dbiV)
         plot(t,dbiV);
         legend({'\Delta(sim-li)','\Delta(sim-bi)'});
         minV = min(min(dbiV),min(dliV));
@@ -166,7 +168,7 @@ function fo(picformat,cfgFn)
         plot(tE,minV*ones(1,Ein),'.r');
         targetV = dliV;
         for i=1:Ein
-            iv = floor(tE(i)/tstep);
+            iv = floor(tE(i)/tstep)+1;
             jv = iv + 1;
             vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
             plot([tE(i),tE(i)],[minV,vEtar],':r');
@@ -185,7 +187,7 @@ function fo(picformat,cfgFn)
         vItar = zeros(Iin,1);
         plot(tI,minV*ones(1,Iin),'.b');
         for i=1:Iin
-            iv = floor(tI(i)/tstep);
+            iv = floor(tI(i)/tstep)+1;
             jv = iv + 1;
             vItar(i) = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
             plot([tI(i),tI(i)],[minV,vItar(i)],':b');

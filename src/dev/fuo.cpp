@@ -54,6 +54,9 @@ int main(int argc, char **argv)
     vector<size> crossb, crossl;
     unsigned int seed;
     bool spikeShape;
+    bool test;
+    vector<size_b>testID;
+    vector<double>testTime;
     bool kVStyle;
     int afterCrossBehavior;
     string config_file;
@@ -72,6 +75,8 @@ int main(int argc, char **argv)
 		("ith,i", po::value<unsigned int>(&ith)->default_value(1), "i(>0) th neuron")
 		("rE", po::value<vector<double>>()->multitoken()->composing(), "Exc poisson rate")
 		("rI", po::value<vector<double>>()->multitoken()->composing(), "Inh poisson rate")
+		("testTime", po::value<vector<double>>()->multitoken()->composing(), "test input time array")
+		("testID", po::value<vector<size_b>>()->multitoken()->composing(), "test input Strength ID array")
 		("run_t,t", po::value<double>(&run_t), "sim time")
         ("vinit,v", po::value<unsigned int>(&vinit), "vinit")
         ("tref",po::value<double>(&tref),"refractory period")
@@ -80,6 +85,7 @@ int main(int argc, char **argv)
         ("afterCrossBehavior",po::value<int>(&afterCrossBehavior)->default_value(2)," 0:skip, 1:linear, 2:bilinear")
         ("spikeShape",po::value<bool>(&spikeShape)->default_value(true)," if false, crossing is spiking")
         ("kVStyle",po::value<bool>(&kVStyle)->default_value(true)," if false, crossing is spiking")
+        ("test",po::value<bool>(&test)," if true, use test input")
 		("ignore_t", po::value<double>(&ignore_t), "ingore time while applying bilinear rules");
 
 	cmd_line_options.add(Generic);
@@ -174,6 +180,16 @@ int main(int argc, char **argv)
     nt = static_cast<unsigned int>(run_t/tstep)+1;
     cout << tstep << " ms -> " << nt << "steps " <<endl;
     cout << "initial voltage " << neuroLib.vRange[vinit] << endl;  
+    if (test) {
+        rEl = 1;
+        if (vm.count("testTime") && vm.count("testID")) {
+            testTime = vm["testTime"].as<vector<double>>();
+            testID = vm["testID"].as<vector<size_b>>();
+        } else {
+            cout << " no test input provided" << endl;
+            return 0;
+        }
+    }
     for (int k=0; k<rEl; k++) {
         cout << "============== " << k+1 << " ==============" << endl;
         simV.assign(nt,neuroLib.vRange[vinit]);
@@ -201,12 +217,20 @@ int main(int argc, char **argv)
         hEl.reserve(nt);
         hIl.reserve(nt);
         // get external inputs
-        double rEt= rE[k]/1000;
-        double rIt= rI[k]/1000; 
         vector<vector<double>> tPoi(neuroLib.nE+neuroLib.nI,vector<double>());
-        while (neuron.status) {
-            neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
-            tPoi[neuron.inID.back()].push_back(neuron.tin.back());
+        if (test) {
+            for (int it=0; it<testTime.size(); it++) {
+                neuron.tin.push_back(testTime[it]);
+                neuron.inID.push_back(testID[it]);
+                tPoi[neuron.inID.back()].push_back(neuron.tin.back());
+            }
+        } else {
+            double rEt= rE[k]/1000;
+            double rIt= rI[k]/1000; 
+            while (neuron.status) {
+                neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
+                tPoi[neuron.inID.back()].push_back(neuron.tin.back());
+            }
         }
         for (size i=0;i<neuroLib.nE+neuroLib.nI; i++) {
             cout << i << ": {";

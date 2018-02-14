@@ -86,7 +86,7 @@ y(:,1,:)=yold';
 K=zeros(nf,9,4);
 tstep2 = 0.5*tstep;
 for i=1:count-1
-    if round(para.vtime/tstep) + 1 < i+1
+    if round(para.vtime/tstep) < i
         K(:,1,1)=volt_df(t,v,m,n,h,p,q,r,s,u,para,bool,ipick,nf); v2 = v+tstep2*K(:,1,1);
         K(:,2,1)=gatingm(v,m,para.vT(ipick));                     m2 = m+tstep2*K(:,2,1); 
         K(:,3,1)=gatingn(v,n,para.vT(ipick));                     n2 = n+tstep2*K(:,3,1);

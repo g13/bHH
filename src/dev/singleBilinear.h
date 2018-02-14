@@ -65,13 +65,17 @@ inline void interpkV(std::vector<double> &v, size vs, double ******kV, int iSyn,
     getNear(vRange,nv,vTar,rv,iv,jv);
     getNear(idtRange,ndt,dtTar0,rdt,idt,jdt);
     double dtTar = dtTar1 - dtTar0;
-    //cout << iSyn << "-" << jSyn << endl;
+    cout << "       " << iSyn << "-" << jSyn << endl;
+    cout << " idt " << idt << ", jdt " << jdt << endl;
+    cout << " dt " << dtTar0 << ", rdt " << rdt << endl;
+    cout << " iv " << iv << ", jv " << jv << endl;
+    cout << " vTar " << vTar << ", rv " << rv << endl;
     if (dtTar == 0) {
         size iidt = idtRange[idt];
         size jjdt = idtRange[jdt];
         for (size i=0;i<tl;i++) {
-            base = kV[iv][idt][iSyn][jSyn][0][iidt+i];
-            tmpkV[i] = base + rv*(kV[jv][idt][iSyn][jSyn][0][iidt+i]-base) + rdt*(kV[iv][jdt][iSyn][jSyn][0][jjdt+i]-base);
+            base = kV[iv][idt][iSyn][jSyn][idt][iidt+i];
+            tmpkV[i] = base + rv*(kV[jv][idt][iSyn][jSyn][idt][iidt+i]-base) + rdt*(kV[iv][jdt][iSyn][jSyn][jdt][jjdt+i]-base);
         }
     } else {
         getNear(idtRange,ndt,idtRange[idt] + dtTar,rdt0,idt0,jdt0);
@@ -120,7 +124,7 @@ inline void interpK(std::vector<double> &v, size vs, double ****k, double ****PS
     if (dtTar == 0) {
         for (size i=0;i<tl;i++) {
             base = k[iv][idt][0][iidt+i];
-            tmpK[i] = base + rv*(k[jv][idt][0][iidt+i]-base) + rdt*(k[iv][jdt][0][jjdt+i]-base);
+            tmpK[i] = base + rv*(k[jv][idt][idt][iidt+i]-base) + rdt*(k[iv][jdt][jdt][jjdt+i]-base);
         }
     } else {
         getNear(idtRange,ndt,idtRange[idt] + dtTar,rdt0,idt0,jdt0);
@@ -234,9 +238,13 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
     size l0 = nt0 - 1;
     size t0 = l0 * tstep;
 
-    size nt = neuroLib.idtRange[ndt-1]+1;
-    size l1 = nt - 1;
+    size nt1 = neuroLib.idtRange[ndt-2] + (l0 - neuroLib.idtRange[ndt-1]) + 1;
+    size l1 = nt1 - 1;
     size t1 = l1 * tstep;
+
+    size nt2 = neuroLib.idtRange[ndt-1]+1;
+    size l2 = nt2 - 1;
+    size t2 = l2 * tstep;
 
     size tb = t1 - ignore_t;
     size lb = static_cast<size>(tb/tstep);
@@ -287,8 +295,8 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
 
             if (i<neuron.tin.size()-1) {
                 ve = static_cast<size>(neuron.tin[i+1]/tstep);
-                if (ve + 1 > vs + nt) {
-                    vc = vs + nt;
+                if (ve > vs + l2) {
+                    vc = vs + nt2;
                 } else {
                     vc = ve + 1;
                 }
@@ -366,12 +374,12 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                             i = ii-1;
                             size it = round(neuron.tin[i]/tstep);
                             dtTarget = vs - it;
-                            if ( l1<= dtTarget) {
+                            if ( l2 < dtTarget) {
                                 break;
                             }
                             if (run_t < neuron.tin[i] + t1)
                                 tl = run_nt-vs;
-                            else tl = static_cast<size>(ceil(nt - dtTarget))+1;
+                            else tl = static_cast<size>(round(nt1 - dtTarget));
                             f = neuron.fStrength[neuron.inID[i]];
                             if (f > 0) {
                                 interpPSP(v,vs, neuroLib.EPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, f, 1,0,tl,currentPSP);
@@ -381,8 +389,8 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                         }
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
-                            if (ve > vs + l1){
-                                vc = vs + nt; 
+                            if (ve > vs + l2){
+                                vc = vs + nt2; 
                             } else {
                                 vc = ve + 1;
                             }
@@ -431,13 +439,21 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
     size l0 = nt0 - 1;
     size t0 = l0 * tstep;
 
-    size nt = neuroLib.idtRange[ndt-1]+1;
-    size l1 = nt - 1;
+    size nt1 = neuroLib.idtRange[ndt-2] + (l0 - neuroLib.idtRange[ndt-1]) + 1;
+    size l1 = nt1 - 1;
     size t1 = l1 * tstep;
 
-    size tb = t1 - ignore_t;
+    size nt2 = neuroLib.idtRange[ndt-1]+1;
+    size l2 = nt2 - 1;
+    size t2 = l2 * tstep;
+
+    size tb = t2 - ignore_t;
     size lb = static_cast<size>(tb/tstep);
     size nb = lb + 1;
+    cout << "t0 " << t0 << endl;
+    cout << "t1 " << t1 << endl;
+    cout << "t2 " << t2 << endl;
+    cout << "tb " << tb << endl;
 
     size run_lt = static_cast<size>(run_t/tstep);
     size run_nt = run_lt + 1;
@@ -462,6 +478,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
     if (neuron.tin.size() > 0) {
         vs = static_cast<size>(neuron.tin[0]/tstep);
         for (i=0; i<neuron.tin.size(); i++) {
+            cout << "i " << i << endl;
             // linear
             if (neuron.tin[i] > run_t) {
                 break;
@@ -486,8 +503,8 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
 
             if (i<neuron.tin.size()-1) {
                 ve = static_cast<size>(neuron.tin[i+1]/tstep);
-                if (ve + 1 > vs + nt) {
-                    vc = vs + nt;
+                if (ve > vs + l2) {
+                    vc = vs + nt2;
                 } else {
                     vc = ve + 1;
                 }
@@ -498,14 +515,16 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
             for (k=i; k>i_b; k--) {
                 j = k-1; // prevent negative for unsigned int iteration number. 
                 dtTarget = neuron.tin[i]-neuron.tin[j];
+                cout << j << ", " << i << endl;
+                //cout << " " << tb << ", " << dtTarget << endl;
                 if (dtTarget > tb) break;
                 dtTarget = dtTarget/tstep; // for interp along dtRange
-                if (neuron.tin[j] + tb > run_t) {
+                if (neuron.tin[j] + t1 > run_t) {
                     tl = run_nt-vs;
                 } else {
-                    tl = static_cast<size>(ceil(nb - dtTarget));
+                    tl = static_cast<size>(ceil(nt1 - dtTarget));
                 }
-                
+                //cout << "  is go for " << tl << endl;
                 if (!kVStyle) {
                     f1 = neuron.fStrength[neuron.inID[j]];
                     if (f1 > 0) kType1 = "1";
@@ -526,7 +545,10 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                             break;
                     }
                 } else {
+                    double before = v[vs+10];
+                    cout << "    v["<< vs+10 << "] before " << v[vs+10];
                     interpkV(v, vs, neuroLib.kV, neuron.inID[j], neuron.inID[i], neuroLib.vRange, neuroLib.idtRange, nv, ndt, vTarget, dtTarget, dtTarget, shift, tl, tmpK);
+                    cout << "   after " << v[vs+10] << ", difference = " << v[vs+10] - before << endl;
                     
                 }
             } 
@@ -604,12 +626,12 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                             size i = ii-1;
                             size it = round(neuron.tin[i]/tstep);
                             dtTarget = vs - it;
-                            if ( l1 <= dtTarget) {
+                            if ( l2 < dtTarget) {
                                 break;
                             }
                             if (run_t < neuron.tin[i] + t1)
                                 tl = run_nt-vs;
-                            else tl = static_cast<size>(ceil(nt - dtTarget))+1;
+                            else tl = static_cast<size>(ceil(nt1 - dtTarget))+1;
                             f2 = neuron.fStrength[neuron.inID[i]];
                             if (f2 > 0) {
                                 interpPSP(v,vs, neuroLib.EPSP, neuroLib.vRange, neuroLib.idtRange, neuroLib.fE, nv, ndt, nE, vTarget, dtTarget, f2, 1,0,tl,currentPSP);
@@ -629,13 +651,13 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                                     double dtTarget1 = vs - jt;
                                     //cout << "vs " << vs << ", it " << it << endl;
                                     assert(vs >= it);
-                                    if (dtTarget1 > lb) {
+                                    if (dtTarget > lb || dtTarget1 > l2) {
                                         break;
                                     } 
-                                    if (neuron.tin[j] + tb > run_t) {
+                                    if (neuron.tin[j] + t1 > run_t) {
                                         tl = run_nt - vs;
                                     } else {
-                                        tl = static_cast<size>(round(nb - dtTarget1));
+                                        tl = static_cast<size>(round(nt1 - dtTarget1));
                                     }
                                     //cout << "begin kV: " << j << ",tl " << tl << ",dtTarget " << dtTarget << ",dtTarget1 " << dtTarget1 << endl;
                                     if (!kVStyle) {
@@ -667,8 +689,8 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                         cout << " finished " << endl;
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
-                            if (ve > vs + l1){
-                                vc = vs + nt; 
+                            if (ve > vs + l2){
+                                vc = vs + nt2; 
                             } else {
                                 vc = ve + 1;
                             }
@@ -698,6 +720,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                 }
             }
             vs = ve;
+            //cout << " vs = " << vs << endl;
         }
     }
     delete []tmp;

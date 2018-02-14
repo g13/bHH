@@ -22,5 +22,6 @@ module load boost
 date
 echo $picformat
 ./fo && matlab -nosplash -r "fo('$picformat','test.cfg');exit;"
+#./fo
 date
 hostname

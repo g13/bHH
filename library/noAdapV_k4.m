@@ -53,7 +53,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     end
     explore = false;
     loadExplore = false;
-    if dur < 0 && dtRange < 0
+    if dur < 0 || dtRange < 0
         explore = true;
     end
     if dur == 0 && dtRange == 0
@@ -105,10 +105,10 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     testII = true;
     testEI = true;
     testIE = true;
-    %multipleInput = false;
+%     multipleInput = false;
     multipleInput = true;
     simpleTest = true;
-    %simpleTest = false;
+%     simpleTest = false;
     test = false;
 %    test = true;
 
@@ -185,7 +185,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             sIPSP0 = squeeze(sIPSP(:,:,1,:));
             vleakage0 = squeeze(vleakage(:,1,:));
             h = plotsPSP0(sEPSP0,sIPSP0,vleakage0,fE,fI,nv0,dur,nt,v0id,idtRange);
-            delete([diri,'/*']);
             if draw
                 fname = ['sPSP0','-',name,'-',num2str(i)];
                 printpic(h,diri,fname,picformat,printDriver,dpi,pos0);
@@ -254,7 +253,6 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             save(['../library/single-',name,'-',num2str(i),'th.mat'],'sEPSP','sIPSP','extraEPSP','extraIPSP','edtRange','nedt','vleakage','sEPSP0','sIPSP0','E_tmax','I_tmax','vleakage0','dtRange','idtRange','ndt','dur','dur0','nt','nt0','t','t0','-v7.3');
         else
             load(['../library/single-',name,'-',num2str(i),'th.mat']);
-            delete([diri,'/*']);
             h = plotsPSP0(sEPSP0,sIPSP0,vleakage0,fE,fI,nv0,dur,nt,v0id,idtRange);
         end
         dtRange
@@ -505,7 +503,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         l0 = round(durpsp/tstep);
 
         if ~simpleTest
-            dur = dur*2; %ms
+            dur = dur*1.5; %ms
             xE = rand(round(rateE*dur*2),1);
             xI = rand(round(rateI*dur*2),1);
             tE = zeros(round(rateE*dur*2),1);
@@ -552,7 +550,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             para.f_I = fI(pfI);
             para.tE = 0;
             para.tI = 0;
-            dur = 1.5*dur0 ;
+            dur = round(1.5*dur0/tstep)*tstep;
 %             dur = 10;
             fname = ['simpleTest',num2str(dur),'-E',num2str(para.tE),'-I',num2str(para.tI),'-',name,'-',num2str(i),'th-v'];
         end
@@ -575,7 +573,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         v = squeeze(tmp(1,:,:));
         vTargetE = v(round(para.tE/tstep)+1);
         vTargetI = v(round(para.tI/tstep)+1);
-        t = 0:tstep:dur;
+        t = (0:length(v)-1)*tstep;
         nt = length(t);
         %ftE = floor(para.tE/tstep)+1;
         %ctE = ceil(para.tE/tstep)+1;
@@ -1396,6 +1394,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
     i2 = n2;
     i1 = n1;
 
+    idtRange = round(dtRange/tstep)+1;
     nedt = length(edtRange);
     kV = zeros(nt,ndt,n2,n1,nv0);
     k = zeros(nt,ndt,nv0);
@@ -1406,7 +1405,11 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
     v2V = zeros(n1*n2,nt,nv0);
     pV = zeros(n1*n2,nt,nv0);
     para.vtime = (iidt-1)*tstep;
-    dtOI = iidt:nt;
+    if idt == ndt
+        dtOI = iidt:nt;
+    else
+        dtOI = iidt:(iidt+(nt-idtRange(idt+1)));
+    end
     dtl = length(dtOI);
     parfor iv0 = 1:nv0
        param = para;
@@ -1422,7 +1425,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
            v2V(range,dtOI,iv0) = [sPSP2(1:dtl,:,1,iv0)]';
        end
        vaddV(:,dtOI,iv0) = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
-       parfor it = iidt:nt
+       parfor it = dtOI
            [k(it,idt,iv0),pV(:,it,iv0),r2(it,idt,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vDoubletV(it,:,iv0)');
            kV(it,idt,:,:,iv0) = reshape(vDoubletV(it,:,iv0)'-vaddV(:,it,iv0),[n2,n1]);
        end
@@ -1486,18 +1489,16 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
         xlabel('t ms');
     end
     vadd = zeros(n1*n2,nt,nv0);
-    idtRange = round(dtRange/tstep)+1;
     iedtRange = round(edtRange/tstep)+1;
     for jdt = (idt+1):ndt
         jjdt = idtRange(jdt);
         para.vtime = (jjdt-1)*tstep;
         if jdt == ndt
-            dtOI = jjdt:nt;
             iend = nt;
         else
-            dtOI = jjdt:idtRange(ndt);
-            iend = idtRange(ndt);
+            iend = jjdt + (nt - idtRange(jdt+1));
         end
+        dtOI = jjdt:iend;
         dtl = length(dtOI);
         para.vtime = (jjdt-1)*tstep;
         vdoub = zeros(nt,n1*n2,nv0);
@@ -1536,7 +1537,7 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
                 v2V(range,dtOI,iv0) = tmp';
             end
             vadd(:,dtOI,iv0) = v1V(:,dtOI,iv0) + v2V(:,dtOI,iv0);
-            parfor it = jjdt:iend
+            parfor it = dtOI
                 [k(it,jdt,iv0),pv(:,it,iv0),r2(it,jdt,iv0)] = p_fit110k0(v1V(:,it,iv0),v2V(:,it,iv0),vdoub(it,:,iv0)');
                 kV(it,jdt,:,:,iv0) = reshape(vdoub(it,:,iv0)'-vadd(:,it,iv0),[n2,n1]);
             end
