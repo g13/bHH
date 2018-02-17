@@ -9,7 +9,7 @@
 #include "NeuronLibrary.h"
 #include "NeuronStruct.h"
 #include "singleRK4.h"
-#include "singleRK2.h"
+//#include "singleRK2.h"
 #include "singleBilinear.h"
 #include "typedefs.h"
 #include <fstream>
@@ -32,6 +32,9 @@ int main(int argc, char **argv)
     ifstream cfg_file;
     string lib_file, para_file;
     mxArray *para;
+    int ic;
+    bool type[5];
+    bool shift;
     double cpu_t_sim, cpu_t_bilinear, cpu_t_linear;
     double rdHH,rgHH;
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
@@ -39,7 +42,8 @@ int main(int argc, char **argv)
     unsigned int ith, nt;
     vector<double> rE, rI;
     double run_t, ignore_t, tau_ed, tau_er, tau_id, tau_ir;
-    double gNa, vNa, gK, vK, gLeak, vLeak, vT, vE, vI, vRest, DeltaT,S;
+    double gNa, vNa, gK, vK, gLeak, vLeak, vT, vE, vI, vRest, DeltaT, S;
+    double gM, gL, gT, vCA, vX, tau_max;
     vector<double> tsp_sim, tsp_bi, tsp_li;
     double tref;
     unsigned int vinit;
@@ -51,6 +55,9 @@ int main(int argc, char **argv)
     vector<double> simV, gE, gI, m, n, h, biV, liV;
     vector<double> gEb, gEl, gIb, gIl, ml, nl, hl, mb, nb, hb;
     vector<double> hEb, hEl, hIb, hIl, hE, hI;
+    vector<double> p, q, r, s, u;
+    vector<double> pl, ql, rl, sl, ul;
+    vector<double> pb, qb, rb, sb, ub;
     vector<size> crossb, crossl;
     unsigned int seed;
     bool spikeShape;
@@ -86,6 +93,7 @@ int main(int argc, char **argv)
         ("spikeShape",po::value<bool>(&spikeShape)->default_value(true)," if false, crossing is spiking")
         ("kVStyle",po::value<bool>(&kVStyle)->default_value(true)," if false, crossing is spiking")
         ("test",po::value<bool>(&test)," if true, use test input")
+        ("shift",po::value<bool>(&shift)," if true,round up input time to nearest time step")
 		("ignore_t", po::value<double>(&ignore_t), "ingore time while applying bilinear rules");
 
 	cmd_line_options.add(Generic);
@@ -123,15 +131,40 @@ int main(int argc, char **argv)
     getIthElementOfFieldArray(vT,para,ith,"vT");
     getIthElementOfFieldArray(vRest,para,ith,"vRest");
     getIthElementOfFieldArray(DeltaT,para,ith,"DeltaT");
+    getIthElementOfFieldArray(gM,para,ith,"gM");
+    getIthElementOfFieldArray(gL,para,ith,"gL");
+    getIthElementOfFieldArray(gT,para,ith,"gT");
+    getIthElementOfFieldArray(vCA,para,ith,"vCA");
+    getIthElementOfFieldArray(vX,para,ith,"vX");
+    getIthElementOfFieldArray(tau_max,para,ith,"tau_max");
+    getIthElementOfFieldArray(ic,para,ith,"type");
+    ic = ic - 1;
     getIthElementOfFieldArray(S,para,ith,"S");
-
     mxDestroyArray(para);
+
+    mxArray* tmp;
+    tmp = matGetVariable(matFile,"bool");
+    cout << "channel bool: ";
+    for (int i=0; i<5; i++) {
+        type[i] = static_cast<bool>(*(mxGetPr(tmp)+i*5+ic));
+        if (i<4){
+            cout << type[i] << ", ";
+        } else {
+            cout << type[i] << endl;
+        }
+    }
+    mxDestroyArray(tmp);
     closeMat(matFile,para_file.c_str());
 
     neuroLib.readLib(lib_file.c_str());
     
-    double pairs[3*2+2+3] = {gNa,vNa,gK,vK,gLeak,vLeak,vE,vI,vT,vRest,DeltaT};
-                          //  0,  1, 2, 3,    4,    5, 6, 7, 8,   9,    10    
+    double pairs[17] = {gNa,vNa,gK,vK,gLeak,vLeak,vE,vI,vT,vRest,DeltaT,gM,gL,gT,vCA,vX,tau_max};
+    // pairs: gNa,vNa,gK,vK,gLeak,vLeak,vE,vI,
+    //         0   1   2  3  4    5      6  7 
+    //        vT,vRest,DeltaT,
+    //         8   9    10
+    //        gM,gL,gT,vCA,Vx,tau_max
+    //        11 12 13  14 15   16
     theme = theme + "-" + to_string(seed);
 	raster_file.open("Raster-" + theme + ".bin", ios::out|ios::binary);
 	tIncome_file.open("tIn-" + theme + ".bin", ios::out|ios::binary);
@@ -198,12 +231,27 @@ int main(int argc, char **argv)
         m.reserve(nt);
         n.reserve(nt);
         h.reserve(nt);
+        p.reserve(nt);
+        q.reserve(nt);
+        r.reserve(nt);
+        s.reserve(nt);
+        u.reserve(nt);
         ml.reserve(nt);
         nl.reserve(nt);
         hl.reserve(nt);
+        pl.reserve(nt);
+        ql.reserve(nt);
+        rl.reserve(nt);
+        sl.reserve(nt);
+        ul.reserve(nt);
         mb.reserve(nt);
         nb.reserve(nt);
         hb.reserve(nt);
+        pb.reserve(nt);
+        qb.reserve(nt);
+        rb.reserve(nt);
+        sb.reserve(nt);
+        ub.reserve(nt);
         gE.reserve(nt);
         gI.reserve(nt);
         gEb.reserve(nt);
@@ -228,7 +276,7 @@ int main(int argc, char **argv)
             double rEt= rE[k]/1000;
             double rIt= rI[k]/1000; 
             while (neuron.status) {
-                neuron.getNextInput(rEt,rEt,rIt,rIt,run_t);
+                neuron.getNextInput(rEt,rEt,rIt,rIt,run_t,shift,tstep);
                 tPoi[neuron.inID.back()].push_back(neuron.tin.back());
             }
         }
@@ -253,11 +301,16 @@ int main(int argc, char **argv)
         m.push_back(m_inf(neuroLib.vRange[vinit],vT));
         n.push_back(n_inf(neuroLib.vRange[vinit],vT));
         h.push_back(h_inf(neuroLib.vRange[vinit],vT));
+        p.push_back(p_inf(neuroLib.vRange[vinit]));
+        q.push_back(q_inf(neuroLib.vRange[vinit]));
+        r.push_back(r_inf(neuroLib.vRange[vinit]));
+        s.push_back(s_inf(neuroLib.vRange[vinit],vX));
+        u.push_back(u_inf(neuroLib.vRange[vinit],vX));
         unsigned int nc = 0;
         neuron.vThres = vRest + 2*(vT -vRest);
         cout << "HH start" << endl;
         plchldr_size1 = 0;
-        nc = RK4_HH(simV,m,n,h,gE,gI,hE,hI,neuron,pairs,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim,false,0,plchldr_size0,plchldr_size1,plchldr_double);
+        nc = RK4_HH(simV,m,n,h,p,q,r,s,u,gE,gI,hE,hI,neuron,pairs,type,tau_er,tau_ed,tau_ir,tau_id,nt,tstep,tsp_sim,false,0,plchldr_size0,plchldr_size1,plchldr_double);
         clock_gettime(clk_id,&tpE);
         cpu_t_sim = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "sim ended, took " << cpu_t_sim << "s" << endl;
@@ -268,7 +321,7 @@ int main(int argc, char **argv)
         clock_gettime(clk_id,&tpS);
         cout << " bilinear start " << endl;
         neuron.vThres = vRest + 2*(vT -vRest);
-        nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
+        nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, pb, qb, rb, sb, ub, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
         clock_gettime(clk_id,&tpE);
         cpu_t_bilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "bilinear est. ended, took " << cpu_t_bilinear << "s" << endl;
@@ -278,7 +331,7 @@ int main(int argc, char **argv)
         nc = 0;
         cout << " linear start " << endl;
         clock_gettime(clk_id,&tpS);
-        nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape);
+        nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, pl, ql, rl, sl, ul, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape);
         clock_gettime(clk_id,&tpE);
         cpu_t_linear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "linear est. ended, took " << cpu_t_linear << "s" << endl;
@@ -323,11 +376,27 @@ int main(int argc, char **argv)
         m.clear();
         n.clear();
         h.clear();
+        p.clear();
+        q.clear();
+        r.clear();
+        s.clear();
+        u.clear();
         ml.clear();
         nl.clear();
         hl.clear();
+        pl.clear();
+        ql.clear();
+        rl.clear();
+        sl.clear();
+        ul.clear();
         mb.clear();
         nb.clear();
+        hb.clear();
+        pb.clear();
+        qb.clear();
+        rb.clear();
+        sb.clear();
+        ub.clear();
         simV.clear();
         biV.clear();
         liV.clear();

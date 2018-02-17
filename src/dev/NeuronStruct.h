@@ -76,18 +76,24 @@ typedef struct NeuronStruct{
         randI.seed(seed+3);
     }
 
-    double getNextInput(double rateE, double max_rateE, double rateI, double max_rateI, double t) {
+    double getNextInput(double rateE, double max_rateE, double rateI, double max_rateI, double t, bool shift, double tstep) {
         if (!Eready && extE) {
             if (rateE != max_rateE) {
                 do tPoiE = tPoiE - log(uniform0_1(poiGenE))/max_rateE;
                 while (uniform0_1(ranGenE) > rateE/max_rateE);
             } else tPoiE = tPoiE - log(uniform0_1(poiGenE))/max_rateE;
+            if (shift){
+                tPoiE = round(tPoiE/tstep)*tstep;
+            }
         }
         if (!Iready && extI) {
             if (rateI != max_rateI) {
                 do tPoiI = tPoiI - log(uniform0_1(poiGenI))/max_rateI;
                 while (uniform0_1(ranGenI) > rateI/max_rateI);
             } else tPoiI = tPoiI - log(uniform0_1(poiGenI))/max_rateI;
+            if (shift){
+                tPoiI = round(tPoiE/tstep)*tstep;
+            }
         }
         if (t < tPoiE && t < tPoiI) {
             status = 0;

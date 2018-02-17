@@ -224,7 +224,7 @@ void getFieldVar(T &var, mxArray *matStruct, unsigned int index, const char* fie
     tmp = mxGetField(matStruct,index,fieldname);
     var = static_cast<T>(mxGetScalar(tmp));
     std::cout << fieldname << ": " << var << std::endl;
-    //mxDestroyArray(tmp);
+    mxDestroyArray(tmp);
 }
 template<typename T>
 void getIthElementOfFieldArray(T &var, mxArray* para, unsigned int ith,  const char* fieldname) {
@@ -232,6 +232,6 @@ void getIthElementOfFieldArray(T &var, mxArray* para, unsigned int ith,  const c
     tmp = mxGetField(para,0,fieldname);
     var = static_cast<T>(*(mxGetPr(tmp)+ith));
     std::cout << fieldname << ": " << var << std::endl;
-    //mxDestroyArray(tmp);
+    mxDestroyArray(tmp);
 }
 #endif

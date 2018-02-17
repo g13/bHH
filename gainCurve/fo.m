@@ -31,9 +31,10 @@ function fo(picformat,cfgFn)
     parentfdr = parts{end};
     outputName = [p.theme,'-',parentfdr];
     ith = 1;
-    run_t = 1000;
-    load(p.lib_file,'dtRange','vRange','dur','kEI','sEPSP0','sEPSP','fE','fI','nE','ndt');
-    nt0 = size(sEPSP0,1);
+    poi_number = true;
+    poi_end = true;
+    diff_poi = false;
+    load(p.lib_file,'dtRange','vRange','dur','kEI','sEPSP','fE','fI','nE','ndt');
     nbt = size(kEI,1);
     nv = length(vRange);
     ndur = size(sEPSP,1);
@@ -44,6 +45,11 @@ function fo(picformat,cfgFn)
     tInFn = ['tIn-',p.theme,'-',num2str(p.seed),'.bin'];
     RasterFn = ['Raster-',p.theme,'-',num2str(p.seed),'.bin'];
     cpuFn = ['cpuTime-',p.theme,'-',num2str(p.seed),'.bin'];
+    DataFid = fopen(DataFn);
+    tmp = fread(DataFid,[1,inf],'double');
+    size(tmp)
+    clear tmp;
+    fclose(DataFid);
     DataFid = fopen(DataFn);
     tInFid = fopen(tInFn);
     RasterFid = fopen(RasterFn);
@@ -64,9 +70,9 @@ function fo(picformat,cfgFn)
         tspSize(j,1) = fread(RasterFid,[1,1], 'int');
         rasterData{j,1} = fread(RasterFid,[tspSize(j,1),1], 'double');
         tspSize(j,2) = fread(RasterFid,[1,1], 'int');
-        rasterData{j,1} = fread(RasterFid,[tspSize(j,2),1], 'double');
+        rasterData{j,2} = fread(RasterFid,[tspSize(j,2),1], 'double');
         tspSize(j,3) = fread(RasterFid,[1,1], 'int');
-        trasterData{j,1} = fread(RasterFid,[tspSize(j,3),1], 'double');
+        rasterData{j,3} = fread(RasterFid,[tspSize(j,3),1], 'double');
         cpuTime(j,1) = fread(cpuFid,[1,1],'double');
         cpuTime(j,2) = fread(cpuFid,[1,1],'double');
         cpuTime(j,3) = fread(cpuFid,[1,1],'double');
@@ -104,16 +110,21 @@ function fo(picformat,cfgFn)
             jv = iv + 1;
             vEtar = simV(iv) + mod(tE(i),tstep)/tstep * (simV(jv)-simV(iv));
             plot([tE(i),tE(i)],[minV,vEtar],':r');
-            text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
-            text(tE(i),minV+(vEtar-minV)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
-         
-            iv = floor((tE(i)+edur)/tstep);
-            if iv+1 < run_nt
-                jv = iv + 1;
-                vEtar = simV(iv) + mod(tE(i),tstep)/tstep * (simV(jv)-simV(iv));
-                plot([tE(i),tE(i)]+edur,[vEtar,maxV],':r');
-                text(tE(i)+edur,maxV-(maxV-vEtar)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
-                text(tE(i)+edur,maxV-(maxV-vEtar)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+            if poi_number
+                text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+                text(tE(i),minV+(vEtar-minV)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+            end
+            if poi_end 
+                iv = floor((tE(i)+edur)/tstep);
+                if iv+1 < run_nt
+                    jv = iv + 1;
+                    vEtar = simV(iv) + mod(tE(i),tstep)/tstep * (simV(jv)-simV(iv));
+                    plot([tE(i),tE(i)]+edur,[vEtar,maxV],':r');
+                    if poi_number
+                        text(tE(i)+edur,maxV-(maxV-vEtar)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+                        text(tE(i)+edur,maxV-(maxV-vEtar)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+                    end
+                end
             end
         end
         vItar = zeros(Iin,1);
@@ -123,30 +134,38 @@ function fo(picformat,cfgFn)
             jv = iv + 1;
             vItar(i) = simV(iv) + mod(tI(i),tstep)/tstep * (simV(jv)-simV(iv));
             plot([tI(i),tI(i)],[minV,vItar(i)],':b');
-            text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
-            text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+            if poi_number
+                text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+                text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+            end
                 
-            iv = floor((tI(i)+edur)/tstep);
-            if iv+1 < run_nt
-                jv = iv + 1;
-                vtar = simV(iv) + mod(tI(i),tstep)/tstep * (simV(jv)-simV(iv));
-                plot([tI(i),tI(i)]+edur,[vtar,maxV],':b');
-                text(tI(i)+edur,maxV-(maxV-vtar)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
-                text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+            if poi_end
+                iv = floor((tI(i)+edur)/tstep);
+                if iv+1 < run_nt
+                    jv = iv + 1;
+                    vtar = simV(iv) + mod(tI(i),tstep)/tstep * (simV(jv)-simV(iv));
+                    plot([tI(i),tI(i)]+edur,[vtar,maxV],':b');
+                    if poi_number
+                        text(tI(i)+edur,maxV-(maxV-vtar)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+                        text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+                    end
+                end
             end
         end
         legend(legendTable,'Location','northwest');
         ylim([minV,maxV]);
         subplot(2,2,3);
         hold on;
-        signLiV = sign(sum(liV-simV>0)-sum(liV-simV<0));
+        signLiV = sign(sum(liV-simV));
         err(j,1,1) = mean(abs(liV-simV))*signLiV;
         err(j,2,1) = std(abs(liV-simV));
-        errorbar(1,err(j,1,1),err(j,2,1));
-        signBiV = sign(sum(biV-simV>0)-sum(biV-simV<0));
+        errorbar(1,err(j,1,1),err(j,2,1),'b');
+        plot(1,err(j,1,1),'*b')
+        signBiV = sign(sum(biV-simV));
         err(j,1,2) = mean(abs(biV-simV))*signBiV;
         err(j,2,2) = std(abs(biV-simV));
-        errorbar(2,err(j,1,2),err(j,2,2));
+        errorbar(2,err(j,1,2),err(j,2,2),'r');
+        plot(2,err(j,1,2),'*r');
         xlim([0,3]);
         set(gca,'xtick',[1,2]);
         plot([0,3],[0,0],':k');
@@ -161,46 +180,61 @@ function fo(picformat,cfgFn)
         dbiV = biV - simV;
         sum(dbiV)
         plot(t,dbiV);
-        legend({'\Delta(sim-li)','\Delta(sim-bi)'});
+        plot(t,zeros(size(t)),':k');
+        legend({'\Delta(li-sim)','\Delta(bi-sim)'});
         minV = min(min(dbiV),min(dliV));
         maxV = max(max(dbiV),max(dliV));
         vEtar = zeros(Ein,1);
         plot(tE,minV*ones(1,Ein),'.r');
         targetV = dliV;
-        for i=1:Ein
-            iv = floor(tE(i)/tstep)+1;
-            jv = iv + 1;
-            vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
-            plot([tE(i),tE(i)],[minV,vEtar],':r');
-            text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
-            text(tE(i),minV+(vEtar-minV)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
-         
-            iv = floor((tE(i)+edur)/tstep);
-            if iv+1 < run_nt
+        if diff_poi
+            for i=1:Ein
+                iv = floor(tE(i)/tstep)+1;
                 jv = iv + 1;
                 vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
-                plot([tE(i),tE(i)]+edur,[vEtar,maxV],':r');
-                text(tE(i)+edur,maxV-(maxV-vEtar)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
-                text(tE(i)+edur,maxV-(maxV-vEtar)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+                plot([tE(i),tE(i)],[minV,vEtar],':r');
+                if poi_number
+                    text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+                    text(tE(i),minV+(vEtar-minV)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+                end
+             
+                if poi_end
+                    iv = floor((tE(i)+edur)/tstep);
+                    if iv+1 < run_nt
+                        jv = iv + 1;
+                        vEtar = targetV(iv) + mod(tE(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+                        plot([tE(i),tE(i)]+edur,[vEtar,maxV],':r');
+                        if poi_number
+                            text(tE(i)+edur,maxV-(maxV-vEtar)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
+                            text(tE(i)+edur,maxV-(maxV-vEtar)*0.1,num2str(i),'Color','r','FontSize',textFontSize);
+                        end
+                    end
+                end
             end
-        end
-        vItar = zeros(Iin,1);
-        plot(tI,minV*ones(1,Iin),'.b');
-        for i=1:Iin
-            iv = floor(tI(i)/tstep)+1;
-            jv = iv + 1;
-            vItar(i) = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
-            plot([tI(i),tI(i)],[minV,vItar(i)],':b');
-            text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
-            text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
-                
-            iv = floor((tI(i)+edur)/tstep);
-            if iv+1 < run_nt
+            vItar = zeros(Iin,1);
+            plot(tI,minV*ones(1,Iin),'.b');
+            for i=1:Iin
+                iv = floor(tI(i)/tstep)+1;
                 jv = iv + 1;
-                vtar = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
-                plot([tI(i),tI(i)]+edur,[vtar,maxV],':b');
-                text(tI(i)+edur,maxV-(maxV-vtar)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
-                text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+                vItar(i) = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+                plot([tI(i),tI(i)],[minV,vItar(i)],':b');
+                if poi_number
+                    text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+                    text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+                end
+                    
+                if poi_end
+                    iv = floor((tI(i)+edur)/tstep);
+                    if iv+1 < run_nt
+                        jv = iv + 1;
+                        vtar = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+                        plot([tI(i),tI(i)]+edur,[vtar,maxV],':b');
+                        if poi_number
+                            text(tI(i)+edur,maxV-(maxV-vtar)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+                            text(tI(i)+edur,maxV-(maxV-vtar)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+                        end
+                    end
+                end
             end
         end
         fname =[outputName,'-trial',num2str(j)];

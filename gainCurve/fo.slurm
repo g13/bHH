@@ -4,7 +4,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=40G
-#SBATCH --time=00:10:00
+#SBATCH --time=00:30:00
 #SBATCH -o fo_%J.out
 #SBATCH --job-name=fO
 #SBATCH --mail-user=wd554@nyu.edu
@@ -21,7 +21,7 @@ module load matlab
 module load boost
 date
 echo $picformat
-./fo && matlab -nosplash -r "fo('$picformat','test.cfg');exit;"
+./fo && matlab -nosplash -r "fo('$picformat','test.cfg');plotGainCurve();exit;"
 #./fo
 date
 hostname

@@ -14,6 +14,7 @@ fi
 cp fo $dir
 cp read_cfg.m $dir
 cp fo.m $dir
+cp plotGainCurve.m $dir
 cp fo.slurm $dir
 cp ../input.cfg $dir/test.cfg
 
