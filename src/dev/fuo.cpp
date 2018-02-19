@@ -276,8 +276,9 @@ int main(int argc, char **argv)
             double rEt= rE[k]/1000;
             double rIt= rI[k]/1000; 
             while (neuron.status) {
-                neuron.getNextInput(rEt,rEt,rIt,rIt,run_t,shift,tstep);
-                tPoi[neuron.inID.back()].push_back(neuron.tin.back());
+                if (neuron.getNextInput(rEt,rEt,rIt,rIt,run_t,shift,tstep)>=0) {
+                    tPoi[neuron.inID.back()].push_back(neuron.tin.back());
+                }
             }
         }
         for (size i=0;i<neuroLib.nE+neuroLib.nI; i++) {
@@ -331,7 +332,7 @@ int main(int argc, char **argv)
         nc = 0;
         cout << " linear start " << endl;
         clock_gettime(clk_id,&tpS);
-        nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, pl, ql, rl, sl, ul, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape);
+        //nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, pl, ql, rl, sl, ul, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape);
         clock_gettime(clk_id,&tpE);
         cpu_t_linear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "linear est. ended, took " << cpu_t_linear << "s" << endl;
@@ -400,6 +401,8 @@ int main(int argc, char **argv)
         simV.clear();
         biV.clear();
         liV.clear();
+        crossl.clear();
+        crossb.clear();
     }
     if (data_file.is_open())        data_file.close();
     if (raster_file.is_open())      raster_file.close();

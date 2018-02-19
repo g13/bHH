@@ -5,7 +5,7 @@ function p = read_cfg(cfgFn)
         p = 0;
         return
     end
-    tline = fgetl(fid)
+    tline = fgetl(fid);
     if length(tline) == 0
         tline = '#';
     end

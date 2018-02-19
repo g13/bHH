@@ -107,17 +107,17 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     testIE = true;
 %     multipleInput = false;
     multipleInput = true;
-    simpleTest = true;
-%     simpleTest = false;
+%     simpleTest = true;
+    simpleTest = false;
     test = false;
 %    test = true;
 
-    seed = 89749+1;
+    seed = 132423;
     ignore = 0;
     ignorefE = 0;
     ignorefI = 0; 
-    rateE = 60/1000; % Hz/1000
-    rateI = 40/1000;
+    rateE = 120/1000; % Hz/1000
+    rateI = 80/1000;
     para.fCurrent = 0;
     v0id = find(abs(v0 - 0.0)<1e-14);
     if isempty(v0id)
@@ -167,7 +167,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             if loadExplore
                 load(['../library/explore-',name,'-',num2str(i),'th.mat'],'dtRange','dur');
             end
-            [sEPSP,sIPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange);
+            [sEPSP,sIPSP,E_tmax,I_tmax,vleakage,dtRange,dur,sVcapE,sVcapI] = sPSP_check(silico,tstep,vRange,fI',fE',para,bool,name,dur,i,v0id,dtRange);
             dur0 = dur; % linear length
             t = 0:tstep:dur;
             t0 = 0:tstep:dur0;
@@ -482,9 +482,11 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
     else
         if multipleInput
-            load(['single-',name,'-',num2str(i),'th']);
+%             load(['single-',name,'-',num2str(i),'th']);
             load([name,'-',num2str(i),'th']);
+            t0 = ((1:size(sEPSP,1))-1)*tstep;
             disp('kV loaded');
+            dtRange
         end
     end
     if multipleInput
@@ -494,7 +496,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             % poisson inputs
         %  seed = 237587; % spike
 %         poinumber = true;
-        poinumber = false;
+        poinumber = true;
         poiend = false;
         idtRange = round(dtRange/tstep)+1;
         durpsp = dtRange(ndt-1) + dur - dtRange(ndt);
@@ -503,7 +505,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         l0 = round(durpsp/tstep);
 
         if ~simpleTest
-            dur = dur*1.5; %ms
+%             dur = max(dur*1.5,2500); %ms
+            dur = 1000;
             xE = rand(round(rateE*dur*2),1);
             xI = rand(round(rateI*dur*2),1);
             tE = zeros(round(rateE*dur*2),1);
@@ -542,15 +545,15 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             end
             fname = ['MultipleInputs',num2str(dur),'-E',num2str(rateE*1e3),'-I',num2str(rateI*1e3),'-S',num2str(seed),'-',name,'-',num2str(i),'th-v'];
         else
-            pfE = nE-ignorefE;
-            pfI = nI-ignorefI;
+            pfE = [2];
+            pfI = [2];
             nfE = length(pfE);
             nfI = length(pfI);
             para.f_E = fE(pfE);
             para.f_I = fI(pfI);
-            para.tE = 0;
-            para.tI = 0;
-            dur = round(1.5*dur0/tstep)*tstep;
+            para.tE = [10];
+            para.tI = [5];
+            dur = 600;
 %             dur = 10;
             fname = ['simpleTest',num2str(dur),'-E',num2str(para.tE),'-I',num2str(para.tI),'-',name,'-',num2str(i),'th-v'];
         end
@@ -623,11 +626,12 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         else
             vadd = vleakage0(1:nt,v0id);
         end
+%         vadd = vadd+para.vRest(i);
         vpred = vadd;
         iI = 1;
         finishI = false;
         for iE = 1:nfE
-            while para.tI(iI) < para.tE(iE)
+            while para.tI(iI) < para.tE(iE) && ~finishI
                 vI(:,iI) = interpPSP(sIPSP0(:,pfI(iI),:),vadd(tIs(iI)),vRange);
                 tpick = tIs(iI):tIeadd(iI);
                 vadd(tpick) = vadd(tpick) + vI(1:tIladd(iI),iI);
@@ -856,6 +860,17 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 iKd = squeeze(tmp(3,:,:)).^4.*para.gK(i).*(v-para.vK);
                 plot(t,abs(iNa),'-r');
                 plot(t,abs(iKd),'-b');
+                if bool(para.type(i),4)
+                    disp('iL in green');
+                    iL = squeeze(tmp(6,:,:)).^2.*squeeze(tmp(7,:,:)).*para.gL(i).*(v-para.vCA);
+                    plot(t,iL,abs(iL),'-g');
+                end
+                if bool(para.type(i),5)
+                    disp('iT in yellow');
+                    iT = squeeze(tmp(8,:,:)).^2.*squeeze(tmp(9,:,:)).*para.gT(i).*(v-para.vCA);
+                    plot(t,iT,abs(iT),'-y');
+                end
+
             end
             ylim(ax(2),[0,inf]);
             axes(ax(1));
@@ -864,8 +879,10 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         end
         plot(t,vadd,'--m');
         plot(t,vpred,':m');
-        sl = (max(v)-min(v));
-        y = [min(v)-sl*1.2,max(v) + sl*1.2];
+        maxv = max([max(v),max(vadd),max(vpred)]);
+        minv = min([min(vadd),min(v),min(vpred)]);
+        sl = maxv - minv;
+        y = [minv-sl*0.2,maxv + sl*0.2];
         FS = 10;
         plot(ones(2,1)*para.tE,[y(1)*ones(1,nfE);vTargetE],':r');
         plot(para.tE,y(1)*ones(1,nfE),'sr');
@@ -915,8 +932,8 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         hold on
         v = v';
         plot([0,3],zeros(2,1),':k');
-        errorbar(1,sign(sum(vadd -v>0)*2-1) *mean(abs(vadd-v)),  std(abs(vadd-v)),'*m');
-        e=errorbar(2,sign(sum(vpred-v>0)*2-1)*mean(abs(vpred-v)),std(abs(vpred-v)),'*b');
+        errorbar(1,sign(sum(vadd-v)) *mean(abs(vadd-v)),std(abs(vadd-v)),'*m');
+        e=errorbar(2,sign(sum(vpred-v))*mean(abs(vpred-v)),std(abs(vpred-v)),'*b');
         set(ax3,'XTick',[1,2]);
         set(ax3,'XTickLabel',{'linear';'bilinear'});
         legend([e],{'k'});
@@ -926,6 +943,7 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         hold on
         plot(t,vadd-v,'--m');
         plot(t,vpred-v,':m');
+        plot(t,zeros(size(t)),':k');
         xlabel('ms');
         ylabel('err mV');
         xlim([t(1),t(end)]);
@@ -998,7 +1016,7 @@ function [EPSP,IPSP,dtRange,ndt] = get_extraPSP(vleakage,silico,tstep,vRange,fIR
     end
     disp('extra sPSP complete');
 end
-function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tstep,vRange,fIRange,fERange,para,bool,name,dur,i,v0id,dtRange0)
+function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur,sVcapE,sVcapI] = sPSP_check(silico,tstep,vRange,fIRange,fERange,para,bool,name,dur,i,v0id,dtRange0)
     nv0 = length(vRange);
     nE = length(fERange);
     nI = length(fIRange);
@@ -1118,10 +1136,6 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
         g = (gE'./max(gE)+gI'./max(gI))/2;
 
         ndt = -dtRange0(1);
-        E_tmax =  zeros(nE,ndt,nv0);
-        I_tmax = zeros(nI,ndt,nv0);
-        ampMaxE = zeros(nE,ndt,nv0);
-        ampMaxI = zeros(nI,ndt,nv0);
 
         nnt = nt;
         nnt_old = 0;
@@ -1132,6 +1146,13 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
             ndt = length(idtRange)
             dtRange = idtRange*tstep
             vleakage = zeros(nt,ndt,nv0);
+            E_tmax =  zeros(nE,ndt,nv0);
+            I_tmax = zeros(nI,ndt,nv0);
+            ampMaxE = zeros(nE,ndt,nv0);
+            ampMaxI = zeros(nI,ndt,nv0);
+            sVcapE = nv + ones(nE,ndt);
+            sVcapI = nv + ones(nI,ndt);
+
             for idt = 1:ndt
                 vleakage(:,idt,:) =[zeros(idtRange(idt),1,nv0);reshape(vleakTmp(1:nt-idtRange(idt),:),[nt-idtRange(idt),1,nv0])];
                 %idtRange(idt)
@@ -1161,9 +1182,14 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
                     [ampMaxE(:,idt,iv0),E_tmax(:,idt,iv0)] = max(abs(tmpEv(idtRange(idt)+1:nt,:)));
                     EPSP(:,:,idt,iv0) = tmpEv;
                 end
-                if max(ampMaxE(:))>30
-                    disp(max(ampMaxE(:)));
-                    assert(max(ampMaxE(:))<30);
+                for idt = 1:ndt
+                    [mTmp, iE] = max(ampMaxE(:,idt,iv0));
+                    if mTmp>30
+                        disp(mTmp);
+                        if iv0 < sVcapE(iE,idt)
+                            sVcapE(iE,idt) = iv0;
+                        end
+                    end
                 end
 
                 v0 = vRange(v0id)*ones(nI,1);
@@ -1180,9 +1206,14 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
                     [ampMaxI(:,idt,iv0),I_tmax(:,idt,iv0)] = max(abs(tmpIv(idtRange(idt)+1:nt,:)));
                     IPSP(:,:,idt,iv0) = tmpIv;
                 end
-                if max(ampMaxI(:))>30
-                    disp(max(ampMaxI(:)));
-                    assert(max(ampMaxI(:))<30);
+                for idt = 1:ndt
+                    [mTmp, iI] = max(ampMaxI(:,idt,iv0));
+                    if mTmp>30
+                        disp(mTmp);
+                        if iv0 < sVcapI(iI,idt)
+                            sVcapI(iI,idt) = iv0;
+                        end
+                    end
                 end
                 ratio = ampMaxE(1,:,iv0)./ampMaxE(1,1,iv0);
                 min(ratio)
@@ -1229,6 +1260,8 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
         vleakage = zeros(nt,ndt,nv0);
         ampMaxE = zeros(nE,ndt,nv0);
         ampMaxI = zeros(nI,ndt,nv0);
+        sVcapE = nv + ones(nE,ndt);
+        sVcapI = nv + ones(nI,ndt);
         for idt = 1:ndt
             vleakage(:,idt,:) =[zeros(idtRange(idt),1,nv0);reshape(vleakTmp(1:nt-idtRange(idt),:),[nt-idtRange(idt),1,nv0])];
             %if idtRange(idt) > 0
@@ -1253,9 +1286,14 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
                 [ampMaxE(:,idt,iv0),E_tmax(:,idt,iv0)] = max(abs(tmpEv(idtRange(idt)+1:nt,:)));
                 EPSP(:,:,idt,iv0) = tmpEv;
             end
-            if max(ampMaxE(:))>30
-                disp(max(ampMaxE(:)));
-                assert(max(ampMaxE(:))<30);
+            for idt = 1:ndt
+                [mTmp, iE] = max(ampMaxE(:,idt,iv0));
+                if mTmp>30
+                    disp(mTmp);
+                    if iv0 < sVcapE(iE,idt)
+                        sVcapE(iE,idt) = iv0;
+                    end
+                end
             end
 
             v0 = vRange(v0id)*ones(nI,1);
@@ -1272,25 +1310,16 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur] = sPSP_check(silico,tste
                 [ampMaxI(:,idt,iv0),I_tmax(:,idt,iv0)] = max(abs(tmpIv(idtRange(idt)+1:nt,:)));
                 IPSP(:,:,idt,iv0) = tmpIv;
             end
-            if max(ampMaxI(:))>30
-                disp(max(ampMaxI(:)));
-                assert(max(ampMaxI(:))<30);
+            for idt = 1:ndt
+                [mTmp, iI] = max(ampMaxI(:,idt,iv0));
+                if mTmp>30
+                    disp(mTmp);
+                    if iv0 < sVcapI(iI,idt)
+                        sVcapI(iI,idt) = iv0;
+                    end
+                end
             end
         end
-        %disp('EPSP');
-        %for idt = 1:ndt
-        %    if idtRange(idt) > 0
-        %        disp(squeeze(EPSP(idtRange(idt),1,idt,:))');
-        %    end
-        %    disp(squeeze(EPSP(idtRange(idt)+1,1,idt,:))');
-        %end
-        %disp('IPSP');
-        %for idt = 1:ndt
-        %    if idtRange(idt) > 0
-        %        disp(squeeze(IPSP(idtRange(idt),1,idt,:))');
-        %    end
-        %    disp(squeeze(IPSP(idtRange(idt)+1,1,idt,:))');
-        %end
     end
     disp('sPSP complete');
 end
@@ -1356,13 +1385,19 @@ function [v,v1,v2,ind] = interpPSP(sPSP,vTarget,vRange)
         v = v1 + (vTarget-vRange(nv0-1))/(vRange(nv0)-vRange(nv0-1))*(v2-v1);
     else
         if (ind == 1)
+            1
+            2
             v1 = sPSP(:,:,1);
             v2 = sPSP(:,:,2);
-            v = v2 + (vTarget-vRange(2))/(vRange(1)-vRange(2))*(v1-v2);
+            rv = (vTarget-vRange(2))/(vRange(1)-vRange(2))
+            v = v2 + rv*(v1-v2);
         else
+            ind-1
+            ind
             v1 = sPSP(:,:,ind-1);
             v2 = sPSP(:,:,ind);
-            v = v1 + (vTarget-vRange(ind-1))/(vRange(ind)-vRange(ind-1))*(v2-v1);
+            rv = (vTarget-vRange(ind-1))/(vRange(ind)-vRange(ind-1))
+            v = v1 + rv*(v2-v1);
         end
     end
 end
@@ -1507,12 +1542,13 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
             param.newv = vRange(iv0);
             tmp = silico(name,v0,param,bool,tstep,dur,i,false);
             vdoub(:,:,iv0) = squeeze(tmp(1,:,:));
+            nTmp(iv0,:) = max(vdoub(:,:,iv0);
         end
+        dt = dtRange(jdt) - dtRange(idt);
         pv = zeros(n1*n2,nt,nv0);
         for iv0 = 1:nv0
             vleak = vleakage(dtOI,jdt,iv0);
             vdoub(dtOI,:,iv0) = vdoub(dtOI,:,iv0) - repmat(vleak,[1,n1*n2]);
-            dt = dtRange(jdt) - dtRange(idt);
             if sum(abs(dt-dtRange)<1e-14)==1
                 kdt = find(abs(dt-dtRange)<1e-14);
                 assert(length(kdt)==1);
@@ -1690,27 +1726,30 @@ function [kVtmp, vtmp] = interpKV(k,sPSP,vTarget,tTarget,v,nv0,idtRange,ndt,lt)
     if fdt < ndt
         qdt = fdt + 1;
         t1 = (idtRange(qdt)) + (0:lt);
-        rt = (tTarget-idtRange(fdt))/(idtRange(qdt)-idtRange(fdt));
+        rt = (tTarget-idtRange(fdt))/(idtRange(qdt)-idtRange(fdt))
     else
         qdt = fdt;
         t1 = t0;
-        rt = 0;
+        rt = 0
         assert(fdt == ndt);
     end
     if isempty(fv) % out of lower bound exterpolation
         k0 = k(t0,fdt,fdt,1);
-        kVtmp = k0 + (vTarget-v(1))/(v(1)-v(2)) * (k0-k(t0,fdt,fdt,2)) + rt * (k(t1,qdt,qdt,1)-k0);
+        rv = (vTarget-v(1))/(v(1)-v(2))
+        kVtmp = k0 + rv * (k0-k(t0,fdt,fdt,2)) + rt * (k(t1,qdt,qdt,1)-k0);
         sPSP0 = sPSP(t0,fdt,1);
-        vtmp = sPSP0 + (vTarget-v(1))/(v(1)-v(2)) * (sPSP0-sPSP(t0,fdt,2)) + rt * (sPSP(t1,qdt,1)-sPSP0);
+        vtmp = sPSP0 + rv * (sPSP0-sPSP(t0,fdt,2)) + rt * (sPSP(t1,qdt,1)-sPSP0);
     else
         k0 = k(t0,fdt,fdt,fv);
         sPSP0 = sPSP(t0,fdt,fv);
         if fv == nv0  % out of upper bound exterpolation
-            kVtmp = k0 + (vTarget-v(fv))/(v(fv)-v(fv-1)) * (k0-k(t0,fdt,fdt,fv-1));
-            vtmp = sPSP0 + (vTarget-v(fv))/(v(fv)-v(fv-1)) * (sPSP0-sPSP(t0,fdt,fv-1));
+            rv = (vTarget-v(fv))/(v(fv)-v(fv-1))
+            kVtmp = k0 +  rv * (k0-k(t0,fdt,fdt,fv-1));
+            vtmp = sPSP0 + rv * (sPSP0-sPSP(t0,fdt,fv-1));
         else
-            kVtmp = k0 + (vTarget-v(fv))/(v(fv+1)-v(fv)) * (k(t0,fdt,fdt,fv+1)-k0);
-            vtmp = sPSP0 + (vTarget-v(fv))/(v(fv+1)-v(fv)) * (sPSP(t0,fdt,fv+1)-sPSP0);
+            rv = (vTarget-v(fv))/(v(fv+1)-v(fv))
+            kVtmp = k0 + rv * (k(t0,fdt,fdt,fv+1)-k0);
+            vtmp = sPSP0 + rv * (sPSP(t0,fdt,fv+1)-sPSP0);
         end
         kVtmp = kVtmp + rt * (k(t1,qdt,qdt,fv)-k0);
         vtmp = vtmp + rt * (sPSP(t1,qdt,fv)-sPSP0);

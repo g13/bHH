@@ -116,7 +116,8 @@ unsigned int RK4_HH(std::vector<double> &v, std::vector<double> &m, std::vector<
     double vT = pairs[8];
     double m_next = 0, n_next = 0, h_next = 0, v_next;
     double p_next = 0, q_next = 0, r_next = 0, s_next = 0, u_next = 0, tstep2 = tstep/2;
-    bool spiked,spiking = false;
+    bool spiked = false;
+    bool spiking = false;
     double Vx = pairs[15];
     double tau_max = pairs[16];
     for(j=1; j<nt-vs; j++) {

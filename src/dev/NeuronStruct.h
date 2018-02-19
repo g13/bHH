@@ -95,7 +95,7 @@ typedef struct NeuronStruct{
                 tPoiI = round(tPoiE/tstep)*tstep;
             }
         }
-        if (t < tPoiE && t < tPoiI) {
+        if (t <= tPoiE && t <= tPoiI) {
             status = 0;
             return -1;
         }

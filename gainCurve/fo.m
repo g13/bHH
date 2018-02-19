@@ -47,7 +47,6 @@ function fo(picformat,cfgFn)
     cpuFn = ['cpuTime-',p.theme,'-',num2str(p.seed),'.bin'];
     DataFid = fopen(DataFn);
     tmp = fread(DataFid,[1,inf],'double');
-    size(tmp)
     clear tmp;
     fclose(DataFid);
     DataFid = fopen(DataFn);
@@ -103,12 +102,15 @@ function fo(picformat,cfgFn)
         xlabel('t ms');
         ylabel('mem mV');
         hold on
-        vEtar = zeros(Ein,1);
         plot(tE,minV*ones(1,Ein),'.r');
         for i=1:Ein
             iv = floor(tE(i)/tstep)+1;
             jv = iv + 1;
-            vEtar = simV(iv) + mod(tE(i),tstep)/tstep * (simV(jv)-simV(iv));
+            if jv <= length(simV)
+                vEtar = simV(iv) + mod(tE(i),tstep)/tstep * (simV(jv)-simV(iv));
+            else
+                vEtar = simV(iv); 
+            end
             plot([tE(i),tE(i)],[minV,vEtar],':r');
             if poi_number
                 text(tE(i),minV+(vEtar-minV)*0.3,num2str(Eid(i)),'Color','r','FontSize',textFontSize);
@@ -127,16 +129,19 @@ function fo(picformat,cfgFn)
                 end
             end
         end
-        vItar = zeros(Iin,1);
         plot(tI,minV*ones(1,Iin),'.b');
         for i=1:Iin
             iv = floor(tI(i)/tstep)+1;
             jv = iv + 1;
-            vItar(i) = simV(iv) + mod(tI(i),tstep)/tstep * (simV(jv)-simV(iv));
-            plot([tI(i),tI(i)],[minV,vItar(i)],':b');
+            if jv <= length(simV)
+                vItar = simV(iv) + mod(tI(i),tstep)/tstep * (simV(jv)-simV(iv));
+            else
+                vItar = simV(iv);
+            end
+            plot([tI(i),tI(i)],[minV,vItar],':b');
             if poi_number
-                text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
-                text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+                text(tI(i),minV+(vItar-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+                text(tI(i),minV+(vItar-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
             end
                 
             if poi_end
@@ -174,17 +179,14 @@ function fo(picformat,cfgFn)
         ylabel('error per timestep mV');
         subplot(2,2,4);
         dliV = liV - simV;
-        sum(dliV)
         plot(t,dliV);
         hold on
         dbiV = biV - simV;
-        sum(dbiV)
         plot(t,dbiV);
         plot(t,zeros(size(t)),':k');
         legend({'\Delta(li-sim)','\Delta(bi-sim)'});
         minV = min(min(dbiV),min(dliV));
         maxV = max(max(dbiV),max(dliV));
-        vEtar = zeros(Ein,1);
         plot(tE,minV*ones(1,Ein),'.r');
         targetV = dliV;
         if diff_poi
@@ -211,16 +213,15 @@ function fo(picformat,cfgFn)
                     end
                 end
             end
-            vItar = zeros(Iin,1);
             plot(tI,minV*ones(1,Iin),'.b');
             for i=1:Iin
                 iv = floor(tI(i)/tstep)+1;
                 jv = iv + 1;
-                vItar(i) = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
-                plot([tI(i),tI(i)],[minV,vItar(i)],':b');
+                vItar = targetV(iv) + mod(tI(i),tstep)/tstep * (targetV(jv)-targetV(iv));
+                plot([tI(i),tI(i)],[minV,vItar],':b');
                 if poi_number
-                    text(tI(i),minV+(vItar(i)-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
-                    text(tI(i),minV+(vItar(i)-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
+                    text(tI(i),minV+(vItar-minV)*0.3,num2str(Iid(i)),'Color','b','FontSize',textFontSize);
+                    text(tI(i),minV+(vItar-minV)*0.1,num2str(i),'Color','b','FontSize',textFontSize);
                 end
                     
                 if poi_end
@@ -259,7 +260,7 @@ function fo(picformat,cfgFn)
     legend({'linear','bilinear'});
     fname =[outputName,'-err_rate'];
     printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
-    save([outputName,'-Raster.mat'],'rasterData');
+    save([outputName,'-Raster.mat'],'rasterData','tspSize');
 end
 function printpic(h,dir,fname,picformat,printDriver,dpi,pos)
     if ~isempty(picformat)

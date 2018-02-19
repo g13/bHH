@@ -76,10 +76,11 @@ function plotGainCurve(picformat,cfgFn,ld)
     end
     subplot(1,2,2);
     hold on
-    plot(p.rE+p.rI,tspSize(:,1)/p.run_t,'*');
-    plot(p.rE+p.rI,tspSize(:,2)/p.run_t,'o');
-    plot(p.rE+p.rI,tspSize(:,3)/p.run_t,'s');
+    plot(p.rE+p.rI,tspSize(:,1)/p.run_t*1000,'-*');
+    plot(p.rE+p.rI,tspSize(:,2)/p.run_t*1000,'-o');
+    plot(p.rE+p.rI,tspSize(:,3)/p.run_t*1000,'-s');
     legend({'sim','bi','li'});
+    ylim([0,inf]);
     fname =[outputName,'-active'];
     printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
 end

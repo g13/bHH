@@ -19,9 +19,10 @@ module purge
 module load gcc
 module load matlab
 module load boost
+ulimit -s unlimited
 date
 echo $picformat
-./fo && matlab -nosplash -r "fo('$picformat','test.cfg');plotGainCurve();exit;"
+./fo && matlab -nosplash -r "fo('$picformat','test.cfg');plotGainCurve;exit;"
 #./fo
 date
 hostname

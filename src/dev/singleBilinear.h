@@ -181,7 +181,7 @@ inline void interpPSP0(std::vector<double> &v, size vs, double ***PSP0, double *
     else
         for (k=0;k<tl;k++)
             v[vs+k] = v[vs+k] + tmp[k];
-    cout << " dv " << std::setprecision(19) << tmp[9] << endl;
+    //cout << " dv " << std::setprecision(19) << tmp[9] << endl;
 }
 inline void interpVinit(std::vector<double> &v, size vs,  double **vLeak, double *vRange, size nv, double vTar, double tshift, size ts, size tl, double *tmp) {
     size i,j,k;
@@ -321,9 +321,10 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     ncross = ncross +1;
                     // come in and out in multiples of tstep 
                     cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
+                    cross.push_back(k);
                     if (spikeShape) {
                         spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, p, q, r, s, u, k, run_nt, tstep, pairs, type, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, vBack);
-                        cross.push_back(gE.size());
+                        cross.push_back(vs);
                     } else {
                         size ith_old = ith; 
                         size itref = static_cast<size>(round(neuron.tref/tstep));
@@ -338,8 +339,10 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                                 v[k+j] = vCross;
                             } else {
                                 vs = k+j-1;
+                                assert(vs < v.size());
                                 break;
                             }
+                            assert(k + j < v.size());
                         }
                         v[vs] = neuron.vReset;
                         for (ith = ith_old; ith < neuron.tin.size(); ith++) {
@@ -348,7 +351,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                             }
                         }
                         ith--;
-                        cross.push_back(itref);
+                        cross.push_back(vs);
                     }
                     cout << "backed at " << vs*tstep << ", end ith " << ith << endl;
                     cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << endl;
@@ -371,6 +374,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     } else {
                         for (j=1; j<tl;j++) {
                             v[vs+j] = neuron.vReset;
+                            assert(vs + j < v.size());
                         }
                     }
 
@@ -486,7 +490,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
     if (neuron.tin.size() > 0) {
         vs = static_cast<size>(neuron.tin[0]/tstep);
         for (i=0; i<neuron.tin.size(); i++) {
-            cout << "i " << i << endl;
+            //cout << "i " << i << endl;
             // linear
             if (neuron.tin[i] > run_t) {
                 break;
@@ -523,7 +527,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
             for (k=i; k>i_b; k--) {
                 j = k-1; // prevent negative for unsigned int iteration number. 
                 dtTarget = neuron.tin[i]-neuron.tin[j];
-                cout << j << ", " << i << endl;
+                //cout << j << ", " << i << endl;
                 //cout << " " << tb << ", " << dtTarget << endl;
                 if (dtTarget > tb) break;
                 dtTarget = dtTarget/tstep; // for interp along dtRange
@@ -587,8 +591,10 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                                 v[k+j] = vCross;
                             } else {
                                 vs = k+j-1;
+                                assert(vs < v.size());
                                 break;
                             }
+                            assert(k+j < v.size());
                         }
                         v[vs] = neuron.vReset;
                         for (ith = ith_old; ith < neuron.tin.size(); ith++) {
@@ -622,6 +628,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                     } else {
                         for (j=1; j<tl;j++) {
                             v[vs+j] = neuron.vReset;
+                            assert(vs+j < v.size());
                         }
                     }
                     //cout << "ed" << endl;
