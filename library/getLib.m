@@ -11,8 +11,11 @@ for iname = 1:1
     name = names{iname};
     %dtRange = dtRange0{iname};
     %dur = dur{iname}
-    dtRange = -14;
-    dur = -600;
+    dtRange = 0;
+    dur = 0;
+    rateE = 50;
+    rateI = 20;
+    mdur = 1000;
     % name 
         % 'RS_exc_Rat'
         % 'RS_inh_Rat'
@@ -38,16 +41,16 @@ for iname = 1:1
     ppp = true;
     %ppp = false;
     npool = 11;
-    loadData = false;
+    %loadData = false;
     singleStored = false;
     %singleStored = true;
-%     loadData = false;
+    loadData = true;
     v0 = -0.3:0.1:0.7;
     %v0 = [-0.4,0,0.4,1.2];
     %v0 = [-0.3,0,0.5,1.0];
-    fE = linspace(0.125,0.25) * 1e-4;
+    fE = [0.125,0.25] * 5e-5;
     %fI = (0.25:0.25:1.0) * 1e-5;
     fI = fE*2;
     avoidSpike = true;
-    noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored,dur,dtRange,tstep);
+    noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored,dur,dtRange,tstep,rateE,rateI,mdur);
 end

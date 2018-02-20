@@ -1,4 +1,4 @@
-function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored, dur, dtRange, tstep)
+function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored, dur, dtRange, tstep, rateE, rateI, mdur)
     global nvplot ndtplot iv0Case idtCase
     msgID = 'MATLAB:rankDeficientMatrix';
     warning('off',msgID);
@@ -111,13 +111,14 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     simpleTest = false;
     test = false;
 %    test = true;
-
+    fE
+    fI
     seed = 132423;
     ignore = 0;
     ignorefE = 0;
     ignorefI = 0; 
-    rateE = 120/1000; % Hz/1000
-    rateI = 80/1000;
+    rateE = rateE/1000; % Hz/1000
+    rateI = rateI/1000;
     para.fCurrent = 0;
     v0id = find(abs(v0 - 0.0)<1e-14);
     if isempty(v0id)
@@ -506,13 +507,15 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
 
         if ~simpleTest
 %             dur = max(dur*1.5,2500); %ms
-            dur = 1000;
-            xE = rand(round(rateE*dur*2),1);
-            xI = rand(round(rateI*dur*2),1);
-            tE = zeros(round(rateE*dur*2),1);
-            tI = zeros(round(rateI*dur*2),1);
-            pfE = randi(nE-ignorefE,round(rateE*dur*2),1);
-            pfI = randi(nI-ignorefI,round(rateI*dur*2),1);
+            dur = mdur;
+            nXE = max(ceil(rateE*dur*2),10);
+            nXI = max(ceil(rateI*dur*2),10);
+            xE = rand(nXE,1);
+            xI = rand(nXI,1);
+            tE = zeros(size(xE));
+            tI = zeros(size(xI));
+            pfE = randi(nE-ignorefE,nXE,1);
+            pfI = randi(nI-ignorefI,nXI,1);
             t = 0;
             it = 0;
             if rateE > 0
@@ -1150,8 +1153,8 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur,sVcapE,sVcapI] = sPSP_che
             I_tmax = zeros(nI,ndt,nv0);
             ampMaxE = zeros(nE,ndt,nv0);
             ampMaxI = zeros(nI,ndt,nv0);
-            sVcapE = nv + ones(nE,ndt);
-            sVcapI = nv + ones(nI,ndt);
+            sVcapE = nv0 + ones(nE,ndt);
+            sVcapI = nv0 + ones(nI,ndt);
 
             for idt = 1:ndt
                 vleakage(:,idt,:) =[zeros(idtRange(idt),1,nv0);reshape(vleakTmp(1:nt-idtRange(idt),:),[nt-idtRange(idt),1,nv0])];
@@ -1260,8 +1263,8 @@ function [EPSP,IPSP,E_tmax,I_tmax,vleakage,dtRange,dur,sVcapE,sVcapI] = sPSP_che
         vleakage = zeros(nt,ndt,nv0);
         ampMaxE = zeros(nE,ndt,nv0);
         ampMaxI = zeros(nI,ndt,nv0);
-        sVcapE = nv + ones(nE,ndt);
-        sVcapI = nv + ones(nI,ndt);
+        sVcapE = nv0 + ones(nE,ndt);
+        sVcapI = nv0 + ones(nI,ndt);
         for idt = 1:ndt
             vleakage(:,idt,:) =[zeros(idtRange(idt),1,nv0);reshape(vleakTmp(1:nt-idtRange(idt),:),[nt-idtRange(idt),1,nv0])];
             %if idtRange(idt) > 0
@@ -1542,7 +1545,6 @@ function [kV,k,pV,vaddV,vDoubletV,v1v2,h0,h00] = doubleCheck(silico,name,para,v0
             param.newv = vRange(iv0);
             tmp = silico(name,v0,param,bool,tstep,dur,i,false);
             vdoub(:,:,iv0) = squeeze(tmp(1,:,:));
-            nTmp(iv0,:) = max(vdoub(:,:,iv0);
         end
         dt = dtRange(jdt) - dtRange(idt);
         pv = zeros(n1*n2,nt,nv0);
