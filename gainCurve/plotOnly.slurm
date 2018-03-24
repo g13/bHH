@@ -16,13 +16,15 @@
 # **** Actual commands start here ****
 # Load modules here (safety measure)
 module purge
-module load gcc
 module load matlab
-module load boost
 ulimit -s unlimited
 date
-echo $picformat
-./fo && matlab -nosplash -r "fo('$picformat','test.cfg');plotGainCurve('$picformat','test.cfg');exit;"
-#./fo
+
+figSave=false
+plotTrials=true
+
+matlab -nosplash -r "fo('$picformat','test.cfg',$figSave,$plotTrials);plotGainCurve('$picformat','test.cfg');exit;"
+#matlab -nosplash -r "plotGainCurve('$picformat','test.cfg');exit;"
+
 date
 hostname

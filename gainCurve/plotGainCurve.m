@@ -30,6 +30,12 @@ function plotGainCurve(picformat,cfgFn,ld)
         printDriver = '';
     end
     p = read_cfg(cfgFn);
+    if p.spikeShape
+        sS = 1;
+    else 
+        sS = 0;
+    end
+    aCB = p.afterCrossBehavior;
     rEl = length(p.rE);
     load(p.lib_file,'dtRange','vRange','dur','kEI','sEPSP','fE','fI','nE','ndt');
     nbt = size(kEI,1);
@@ -40,7 +46,7 @@ function plotGainCurve(picformat,cfgFn,ld)
     run_nt = round(p.run_t/tstep) + 1;
     parts = strsplit(pwd, '/');
     parentfdr = parts{end};
-    outputName = [p.theme,'-',parentfdr];
+    outputName = [p.theme,'-',num2str(sS),'-',num2str(aCB),'-',parentfdr];
     if ld
         if exist([outputName,'-Raster.mat'])  
             load([outputName,'-Raster.mat']);
@@ -67,20 +73,26 @@ function plotGainCurve(picformat,cfgFn,ld)
     for j=1:rEl
         subplot(rEl,2,2*(j-1)+1);
         hold on
-        plot(rasterData{j,1},zeros(tspSize(j,1),1)+1,'.','MarkerSize',10);
-        plot(rasterData{j,2},zeros(tspSize(j,2),1)+2,'.','MarkerSize',10);
-        plot(rasterData{j,3},zeros(tspSize(j,3),1)+3,'.','MarkerSize',10);
-        set(gca,'YTick',[1,2,3],'YTickLabel',{'sim','bi','li'});
+        plot(rasterData{j,1},zeros(tspSize(j,1),1)+1,'.k','MarkerSize',10);
+        plot(rasterData{j,2},zeros(tspSize(j,2),1)+2,'.b','MarkerSize',10);
+        plot(rasterData{j,3},zeros(tspSize(j,3),1)+3,'.r','MarkerSize',10);
+        if j < rEl
+            set(gca,'XTickLabel',''); 
+        end
+        set(gca,'YTickLabel',''); 
         xlim([0,p.run_t]);
         ylim([0,4]);
     end
+    xlabel('Time (ms)');
     subplot(1,2,2);
     hold on
-    plot(p.rE+p.rI,tspSize(:,1)/p.run_t*1000,'-*');
-    plot(p.rE+p.rI,tspSize(:,2)/p.run_t*1000,'-o');
-    plot(p.rE+p.rI,tspSize(:,3)/p.run_t*1000,'-s');
+    plot(p.rE+p.rI,tspSize(:,1)/p.run_t*1000,'-*k');
+    plot(p.rE+p.rI,tspSize(:,2)/p.run_t*1000,'-ob');
+    plot(p.rE+p.rI,tspSize(:,3)/p.run_t*1000,'-sr');
     legend({'sim','bi','li'});
     ylim([0,inf]);
+    ylabel('Firing Rate (Hz)');
+    xlabel('input Rate (Hz)');
     fname =[outputName,'-active'];
     printpic(gcf,dir,fname,picformat,printDriver,dpi,pos0);
 end

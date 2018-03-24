@@ -1,4 +1,4 @@
-function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored, dur, dtRange, tstep, rateE, rateI, mdur)
+function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,loadData,npool,v0,fE,fI,singleStored, dur, dtRange, tstep, rateE, rateI, mdur,linear0,bilinear0)
     global nvplot ndtplot iv0Case idtCase
     msgID = 'MATLAB:rankDeficientMatrix';
     warning('off',msgID);
@@ -9,34 +9,46 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
     FontSize = 16;
     set(0,'DefaultAxesFontSize',FontSize);
     set(0,'DefaultTextFontSize',FontSize-2);
-    if nargin < 16
-        tstep = 1.0/32;
-        if nargin < 15
-            dtRange = -12;
-            if nargin < 14
-                dur = 300;
-                if nargin < 13
-                    singleStored = false;
-                    if nargin < 12
-                        fI = linspace(0.5,2.0,4) * 1e-5;
-                        if nargin < 11
-                            fE = linspace(0.125,0.5,4) * 1e-5;
-                            if nargin < 10
-                                v0 = -0.4:0.1:1.2;
-                                if nargin < 9
-                                    npool = 1;
-                                    if nargin < 8
-                                        loadData = true;
-                                        if nargin < 7
-                                            ppp = false;
-                                            if nargin < 6
-                                                draw = false;
-                                                if nargin < 5
-                                                    picformat = '';
-                                                    if nargin < 4
-                                                        model = 'HH';
-                                                        if nargin < 3
-                                                            pick = 1;
+    if nargin < 20
+        bilinear0 = false;
+        if nargin < 19
+            linear0 = false;
+            if nargin < 18
+                rateI = 20;
+                if nargin < 17
+                    rateE = 40;
+                    if nargin < 16
+                        tstep = 1.0/32;
+                        if nargin < 15
+                            dtRange = -12;
+                            if nargin < 14
+                                dur = 300;
+                                if nargin < 13
+                                    singleStored = false;
+                                    if nargin < 12
+                                        fI = linspace(0.5,2.0,4) * 1e-5;
+                                        if nargin < 11
+                                            fE = linspace(0.125,0.5,4) * 1e-5;
+                                            if nargin < 10
+                                                v0 = -0.4:0.1:1.2;
+                                                if nargin < 9
+                                                    npool = 1;
+                                                    if nargin < 8
+                                                        loadData = true;
+                                                        if nargin < 7
+                                                            ppp = false;
+                                                            if nargin < 6
+                                                                draw = false;
+                                                                if nargin < 5
+                                                                    picformat = '';
+                                                                    if nargin < 4
+                                                                        model = 'HH';
+                                                                        if nargin < 3
+                                                                            pick = 1;
+                                                                        end
+                                                                    end
+                                                                end
+                                                            end
                                                         end
                                                     end
                                                 end
@@ -516,14 +528,16 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
             tI = zeros(size(xI));
             pfE = randi(nE-ignorefE,nXE,1);
             pfI = randi(nI-ignorefI,nXI,1);
-            t = 0;
-            it = 0;
             if rateE > 0
+                t = 0;
+                it = 1;
+                t = t - log(xE(it))/rateE;
                 while t < dur
-                    it = it + 1;
                     tE(it) = t;
+                    it = it + 1;
                     t = t - log(xE(it))/rateE;
                 end
+                it = it - 1;
                 para.f_E = fE(pfE(1:it));
                 nfE = it;
                 para.tE = round(tE(1:it)'/tstep)*tstep;
@@ -531,14 +545,16 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                 para.tE = [];
                 para.f_E = [];
             end
-            t = 0;
-            it = 0;
             if rateI > 0
+                t = 0;
+                it = 1;
+                t = t - log(xI(it))/rateI;
                 while t < dur
-                    it = it +1;
                     tI(it) = t;
+                    it = it +1;
                     t = t - log(xI(it))/rateI;
                 end
+                it = it - 1;
                 para.f_I = fI(pfI(1:it));
                 nfI = it;
                 para.tI = round(tI(1:it)'/tstep)*tstep;
@@ -635,7 +651,11 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         finishI = false;
         for iE = 1:nfE
             while para.tI(iI) < para.tE(iE) && ~finishI
-                vI(:,iI) = interpPSP(sIPSP0(:,pfI(iI),:),vadd(tIs(iI)),vRange);
+                if linear0
+                    vI(:,iI) = sIPSP0(:,pfI(iI),v0id);
+                else
+                    vI(:,iI) = interpPSP(sIPSP0(:,pfI(iI),:),vadd(tIs(iI)),vRange);
+                end
                 tpick = tIs(iI):tIeadd(iI);
                 vadd(tpick) = vadd(tpick) + vI(1:tIladd(iI),iI);
                 if iI == nfI
@@ -645,14 +665,22 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
                     iI = iI + 1;
                 end
             end
-            vE(:,iE) = interpPSP(sEPSP0(:,pfE(iE),:),vadd(tEs(iE)),vRange);
+            if linear0
+                vE(:,iE) = sEPSP0(:,pfE(iE),v0id);
+            else
+                vE(:,iE) = interpPSP(sEPSP0(:,pfE(iE),:),vadd(tEs(iE)),vRange);
+            end
             tpick = tEs(iE):tEeadd(iE);
             vadd(tpick) = vadd(tpick) + vE(1:tEladd(iE),iE);
         end
         if ~finishI
             iI0 = iI;
             for iI = iI0:nfI
-                vI(:,iI) = interpPSP(sIPSP0(:,pfI(iI),:),vadd(tIs(iI)),vRange);
+                if linear0
+                    vI(:,iI) = sIPSP0(:,pfI(iI),v0id);
+                else
+                    vI(:,iI) = interpPSP(sIPSP0(:,pfI(iI),:),vadd(tIs(iI)),vRange);
+                end
                 tpick = tIs(iI):tIeadd(iI);
                 vadd(tpick) = vadd(tpick) + vI(1:tIladd(iI),iI);
             end
@@ -947,9 +975,10 @@ function [sEPSP,sIPSP,t] = noAdapV_k4(theme,name,pick,model,picformat,draw,ppp,l
         plot(t,vadd-v,'--m');
         plot(t,vpred-v,':m');
         plot(t,zeros(size(t)),':k');
+        xlim([t(1),t(end)]);
+        ylim([max(min([min(vadd-v),min(vpred-v),0]),-3),min(max([max(vadd-v),max(vpred-v),0]),3)]);
         xlabel('ms');
         ylabel('err mV');
-        xlim([t(1),t(end)]);
         
         printpic(hM,diri,fname,picformat,printDriver,dpi,pos0,false);
     end

@@ -8,6 +8,7 @@
 #include "channels.h"
 #include "NeuronLibrary.h"
 #include "NeuronStruct.h"
+#include "nNeuroSt.h"
 #include "singleRK4.h"
 //#include "singleRK2.h"
 #include "singleBilinear.h"
@@ -34,8 +35,9 @@ int main(int argc, char **argv)
     mxArray *para;
     int ic;
     bool type[5];
+    bool jumpy;
     bool shift;
-    double cpu_t_sim, cpu_t_bilinear, cpu_t_linear;
+    double cpu_t_sim, cpu_t_bilinear, cpu_t_linear, cpu_t_jbilinear;
     double rdHH,rgHH;
     clockid_t clk_id = CLOCK_PROCESS_CPUTIME_ID;
     struct timespec tpS, tpE;
@@ -64,7 +66,7 @@ int main(int argc, char **argv)
     bool test;
     vector<size_b>testID;
     vector<double>testTime;
-    bool kVStyle;
+    bool kVStyle, linear0;
     int afterCrossBehavior;
     string config_file;
     string theme;
@@ -92,7 +94,9 @@ int main(int argc, char **argv)
         ("afterCrossBehavior",po::value<int>(&afterCrossBehavior)->default_value(2)," 0:skip, 1:linear, 2:bilinear")
         ("spikeShape",po::value<bool>(&spikeShape)->default_value(true)," if false, crossing is spiking")
         ("kVStyle",po::value<bool>(&kVStyle)->default_value(true)," if false, crossing is spiking")
+        ("linear0",po::value<bool>(&linear0)->default_value(true)," if false, linear est. is voltage dependent")
         ("test",po::value<bool>(&test)," if true, use test input")
+        ("jumpy",po::value<bool>(&jumpy)->default_value(true)," if true, use jumpy bilinear")
         ("shift",po::value<bool>(&shift)," if true,round up input time to nearest time step")
 		("ignore_t", po::value<double>(&ignore_t), "ingore time while applying bilinear rules");
 
@@ -292,6 +296,9 @@ int main(int argc, char **argv)
             cout << "}" << endl;
         }
         cout << endl;
+        if (jumpy) {
+            nNS nn(
+        }
         // HH sim 
         clock_gettime(clk_id,&tpS);
         neuron.vReset = vRest;
@@ -332,11 +339,22 @@ int main(int argc, char **argv)
         nc = 0;
         cout << " linear start " << endl;
         clock_gettime(clk_id,&tpS);
-        //nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, pl, ql, rl, sl, ul, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape);
+        nc = linear_HH(liV, gEl, gIl, hEl, hIl, ml, nl, hl, pl, ql, rl, sl, ul, crossl, neuroLib, neuron, run_t, ignore_t, tsp_li, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossl, vBackl , neuron.tref, afterCrossBehavior, spikeShape,linear0);
         clock_gettime(clk_id,&tpE);
         cpu_t_linear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "linear est. ended, took " << cpu_t_linear << "s" << endl;
         cout << "spikes: " << nc << endl;
+
+        if (jumpy) {
+            nc = 0;
+            clock_gettime(clk_id,&tpS);
+            cout << " bilinear start " << endl;
+            nc = jbilinear_HH(
+            clock_gettime(clk_id,&tpE);
+            cpu_t_jbilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
+            cout << "bilinear est. ended, took " << cpu_t_jbilinear << "s" << endl;
+            cout << "spikes: " << nc << endl;
+        }
        
         // data output
         writeTimeID(neuron.tin, neuron.inID, tIncome_file);
@@ -350,9 +368,9 @@ int main(int argc, char **argv)
         }
         outTsp.clear();
 
-        cpu_file.write((char*)&(tsp_sim),sizeof(double));
-        cpu_file.write((char*)&(tsp_bi), sizeof(double));
-        cpu_file.write((char*)&(tsp_li), sizeof(double));
+        cpu_file.write((char*)&(cpu_t_sim),sizeof(double));
+        cpu_file.write((char*)&(cpu_t_bilinear), sizeof(double));
+        cpu_file.write((char*)&(cpu_t_linear), sizeof(double));
 
         vector<double>* output[8] = {&simV,&biV,&liV,&gE,&gI,&m,&n,&h};
         for (size i=0;i<8;i++) {

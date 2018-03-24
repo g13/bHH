@@ -237,7 +237,7 @@ unsigned int nearThreshold(Neuron neuron, NeuroLib neuroLib, std::vector<double>
     return nc;
 }
 
-unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<double> &p, std::vector<double> &q, std::vector<double> &r, std::vector<double> &s, std::vector<double> &u, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], bool type[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int afterCrossBehavior, bool spikeShape){
+unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vector<double> &gI, std::vector<double> &hE, std::vector<double> &hI, std::vector<double> &m, std::vector<double> &n, std::vector<double> &h, std::vector<double> &p, std::vector<double> &q, std::vector<double> &r, std::vector<double> &s, std::vector<double> &u, std::vector<size> &cross, NeuroLib neuroLib, Neuron neuron, double run_t, double ignore_t, std::vector<double> &tsp, double pairs[], bool type[], double tau_er, double tau_ed, double tau_ir, double tau_id, double vCross, double vBack, double tref, int afterCrossBehavior, bool spikeShape, bool linear0){
     double f, vTarget, dtTarget, tshift, shift;
     size ts, tl, vs, ve, vc, i, j, k, i_b = 0;
     size nE = neuroLib.nE, nI = neuroLib.nI, nv = neuroLib.nv, ndt = neuroLib.ndt;
@@ -286,7 +286,11 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                 break;
             }
             f = neuron.fStrength[neuron.inID[i]];
-            vTarget = interpTar(v,vs,tstep,neuron.tin[i],tshift);
+            if (linear0) {
+                vTarget = neuron.vReset;
+            } else {
+                vTarget = interpTar(v,vs,tstep,neuron.tin[i],tshift);
+            }
             shift = 1-tshift;
 
             if (vs+l0 > run_lt) {
@@ -320,7 +324,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     crossed = true;
                     ncross = ncross +1;
                     // come in and out in multiples of tstep 
-                    cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
+                    //***cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
                     cross.push_back(k);
                     if (spikeShape) {
                         spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, p, q, r, s, u, k, run_nt, tstep, pairs, type, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, vBack);
@@ -353,8 +357,8 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                         ith--;
                         cross.push_back(vs);
                     }
-                    cout << "backed at " << vs*tstep << ", end ith " << ith << endl;
-                    cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << endl;
+                    //***cout << "backed at " << vs*tstep << ", end ith " << ith << endl;
+                    //***cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << endl;
                     if (spiked){
                         spikeCount = spikeCount + spiked;
                         neuron.tsp.push_back(tsp.back());
@@ -365,7 +369,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                         tl = run_nt-vs;
                     }
                     if (tl == 1) {
-                        cout << " time runs out while crossing" << endl;
+                        //***cout << " time runs out while crossing" << endl;
                         break;
                     }
 
@@ -379,7 +383,11 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                     }
 
                     if (afterCrossBehavior) {
-                        vTarget = v[vs];
+                        if (linear0) {
+                            vTarget = neuron.vReset;
+                        } else {
+                            vTarget = v[vs];
+                        }
                         shift = 1;
 
                         for (size ii=ith+1;ii>0; ii--) {
@@ -413,12 +421,12 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                         for (j=vs; j<vc; j++) {
                             if (v[j] > vCross) {
                                 k = j;
-                                cout << " need to cross at " << k << endl;
+                                //***cout << " need to cross at " << k << endl;
                                 break;
                             }
                         }
                     } else {
-                        cout << " no readjust input, only leakage" << endl;
+                        //***cout << " no readjust input, only leakage" << endl;
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
                         }
@@ -427,7 +435,7 @@ unsigned int linear_HH(std::vector<double> &v, std::vector<double> &gE, std::vec
                 }
                 if (crossed) {
                     i = ith;
-                    cout << " last input during cross " << i << endl;
+                    //***cout << " last input during cross " << i << endl;
                     break;
                 }
             }
@@ -573,7 +581,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                     crossed = true;
                     ncross = ncross +1;
                     // come in and out in multiples of tstep 
-                    cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
+                    //***cout << "crossed at " << k*tstep << ", start ith " << ith << endl;
                     if (spikeShape) {
                         spiked = nearThreshold(neuron, neuroLib, v, gE, gI, hE, hI, m, n, h, p, q, r, s, u, k, run_nt, tstep, pairs, type, tau_er, tau_ed, tau_ir, tau_id, tsp, v[k], vs, ith, vBack);
                         cross.push_back(gE.size());
@@ -605,8 +613,8 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                         ith--;
                         cross.push_back(itref);
                     }
-                    cout << "backed at " << vs*tstep << ", end ith " << ith << endl;
-                    cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << endl;
+                    //***cout << "backed at " << vs*tstep << ", end ith " << ith << endl;
+                    //***cout << "v[k] " << v[vs]  << " vCross " << vCross << " vBack " << vBack << endl;
                     if (spiked){
                         spikeCount = spikeCount + spiked;
                         neuron.tsp.push_back(tsp.back());
@@ -617,7 +625,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                         tl = run_nt-vs;
                     }
                     if (tl == 1) {
-                        cout << " time runs out while crossing" << endl;
+                        //***cout << " time runs out while crossing" << endl;
                         break;
                     }
 
@@ -701,7 +709,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                                 } 
                             }
                         }
-                        cout << " finished " << endl;
+                        //***cout << " finished " << endl;
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
                             if (ve > vs + l2){
@@ -716,12 +724,12 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                         for (j=vs; j<vc; j++) {
                             if (v[j] > vCross) {
                                 k = j;
-                                cout << " need to cross again at " << k << endl;
+                                //***cout << " need to cross again at " << k << endl;
                                 break;
                             }
                         }
                     } else {
-                        cout << " no readjust input, only leakage" << endl;
+                        //***cout << " no readjust input, only leakage" << endl;
                         if (ith<neuron.tin.size()-1) {
                             ve = static_cast<size>(neuron.tin[ith+1]/tstep);
                         }
@@ -730,7 +738,7 @@ unsigned int bilinear_HH(std::vector<double> &v, std::vector<double> &gE, std::v
                 }
                 if (crossed) {
                     i = ith;
-                    cout << " last input during cross " << i << endl;
+                    //***cout << " last input during cross " << i << endl;
                     break;
                 }
             }
