@@ -13,7 +13,7 @@
 typedef struct NeuronStruct{
     size postN;
     size preN;
-    double vThres, vReset, tref;
+    double vThres, vReset, tref, vTol;
     unsigned int libID, nfE, nfI;
     // negative for inh
     std::vector<double> preStrength;
@@ -34,7 +34,7 @@ typedef struct NeuronStruct{
 	std::mt19937_64 poiGenE, poiGenI;
 	std::minstd_rand ranGenE, ranGenI, randE, randI;
     double tPoiI, tPoiE;
-    bool Iready, Eready, ei, status, varInput, extE, extI;
+    bool Iready, Eready, status, varInput, extE, extI;
     std::uniform_real_distribution<double> uniform0_1 = std::uniform_real_distribution<double>(0.0,1.0);;
     std::uniform_int_distribution<size_b> uniformE, uniformI;
 

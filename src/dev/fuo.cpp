@@ -8,10 +8,11 @@
 #include "channels.h"
 #include "NeuronLibrary.h"
 #include "NeuronStruct.h"
-#include "nNeuroSt.h"
+#include "jb.h"
 #include "singleRK4.h"
 //#include "singleRK2.h"
 #include "singleBilinear.h"
+#include "nStructs.h"
 #include "typedefs.h"
 #include <fstream>
 #include <iostream>
@@ -26,10 +27,36 @@ using std::to_string;
 using std::ios;
 namespace po = boost::program_options;
 
+template<typename T>
+void size_data_write(ofstream &file, vector<T>** data, int nrow, size nSize, size istart){
+    file.write((char*)&(nSize), sizeof(size));
+    if (nSize) {
+        for (int i=0; i<nrow; i++) {
+            //cout << "size: " << nSize << " vec size " << data[i]->size() << " start at " << istart << endl;
+            file.write((char*)&(data[i]->at(istart)), nSize*sizeof(T));
+        }
+    } else {
+        cout << "empty array" << endl;
+    }
+}
+
+template<typename T>
+void nsection_write(ofstream &file, vector<T>** data, int nrow, vector<size> &istart, vector<size> &nSize) {
+    int nsection = nSize.size();
+    file.write((char*)&(nsection), sizeof(int));
+    if  (nsection) {
+        for (int i=0; i<nsection; i++) {
+            size_data_write(file, data, nrow, nSize[i], istart[i]);
+        }
+    } else {
+        cout << "no section recorded" << endl;
+    }
+}
+
 int main(int argc, char **argv)
 {
     //feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
-    ofstream tIncome_file, raster_file, data_file, cpu_file;
+    ofstream tIncome_file, raster_file, data_file, cpu_file, jND_file;
     ifstream cfg_file;
     string lib_file, para_file;
     mxArray *para;
@@ -48,6 +75,7 @@ int main(int argc, char **argv)
     double gM, gL, gT, vCA, vX, tau_max;
     vector<double> tsp_sim, tsp_bi, tsp_li;
     double tref;
+    double vTol;
     unsigned int vinit;
     MATFile *matFile;
     NeuroLib neuroLib;
@@ -97,6 +125,7 @@ int main(int argc, char **argv)
         ("linear0",po::value<bool>(&linear0)->default_value(true)," if false, linear est. is voltage dependent")
         ("test",po::value<bool>(&test)," if true, use test input")
         ("jumpy",po::value<bool>(&jumpy)->default_value(true)," if true, use jumpy bilinear")
+        ("vTol",po::value<double>(&vTol)," v tolerance when interpolation for cross in jumpy bilinear")
         ("shift",po::value<bool>(&shift)," if true,round up input time to nearest time step")
 		("ignore_t", po::value<double>(&ignore_t), "ingore time while applying bilinear rules");
 
@@ -174,6 +203,7 @@ int main(int argc, char **argv)
 	tIncome_file.open("tIn-" + theme + ".bin", ios::out|ios::binary);
 	data_file.open("Data-" + theme + ".bin", ios::out|ios::binary);
 	cpu_file.open("cpuTime-" + theme + ".bin", ios::out|ios::binary);
+	jND_file.open("jND-" + theme + ".bin", ios::out|ios::binary);
     if (!raster_file) {
         cout << " failed to open file for writing" << endl;
         return 1;
@@ -202,6 +232,7 @@ int main(int argc, char **argv)
     cout << "using tstep: " << tstep << " ms" << endl;
     neuron.initialize(fStrength,neuroLib.nE,neuroLib.nI,0,seed,0,1);
     neuron.tref = tref;
+    neuron.vTol = vTol;
     rE = vm["rE"].as<vector<double>>();
     rI = vm["rI"].as<vector<double>>();
     int rEl = rE.size();
@@ -296,9 +327,6 @@ int main(int argc, char **argv)
             cout << "}" << endl;
         }
         cout << endl;
-        if (jumpy) {
-            nNS nn(
-        }
         // HH sim 
         clock_gettime(clk_id,&tpS);
         neuron.vReset = vRest;
@@ -329,7 +357,7 @@ int main(int argc, char **argv)
         clock_gettime(clk_id,&tpS);
         cout << " bilinear start " << endl;
         neuron.vThres = vRest + 2*(vT -vRest);
-        nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, pb, qb, rb, sb, ub, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb , neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
+        nc = bilinear_HH(biV, gEb, gIb, hEb, hIb, mb, nb, hb, pb, qb, rb, sb, ub, crossb, neuroLib, neuron, run_t, ignore_t, tsp_bi, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb, neuron.tref, afterCrossBehavior, spikeShape, kVStyle);
         clock_gettime(clk_id,&tpE);
         cpu_t_bilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
         cout << "bilinear est. ended, took " << cpu_t_bilinear << "s" << endl;
@@ -346,13 +374,27 @@ int main(int argc, char **argv)
         cout << "spikes: " << nc << endl;
 
         if (jumpy) {
+            double totalRate = 0;
+            for (int i=0;i<rate[ii].size();i++) {
+                totalRate += rate[ii][i];
+            }
+            size rSize = static_cast<size>((totalRate)*run_t);
+            size corrSize = static_cast<size>((totalRate)*(neuroLib.dtRange[neuroLib.ndt-1] - ignore_t));
+            jND jndb(rSize);
+            Input inputb(rSize);
+            Cross crossb(nt,neuroLib.vRange[vinit]);
+            if (ii>0) {
+                jndb.initialize(rSize);
+                inputb.initialize(rSize);
+                crossb.initialize(nt,neuroLib.vRange[vinit]);
+            }
             nc = 0;
             clock_gettime(clk_id,&tpS);
-            cout << " bilinear start " << endl;
-            nc = jbilinear_HH(
+            cout << " jbilinear start " << endl;
+            nc = jbilinear_HH(neuron, neuroLib, input, jndb, Crossb, run_t, ignore_t, corrSize, tsp_jb, pairs, type, tau_er, tau_ed, tau_ir, tau_id, vCrossb, vBackb, afterCrossBehavior, spikeShape);
             clock_gettime(clk_id,&tpE);
             cpu_t_jbilinear = static_cast<double>(tpE.tv_sec-tpS.tv_sec) + static_cast<double>(tpE.tv_nsec - tpS.tv_nsec)/1e9;
-            cout << "bilinear est. ended, took " << cpu_t_jbilinear << "s" << endl;
+            cout << "jbilinear est. ended, took " << cpu_t_jbilinear << "s" << endl;
             cout << "spikes: " << nc << endl;
         }
        
@@ -376,6 +418,29 @@ int main(int argc, char **argv)
         for (size i=0;i<8;i++) {
             data_file.write((char*)&(output[i]->at(0)), nt*sizeof(double));
         }
+        // write jND data
+        vector<size> tmpSize;
+        size ncross, jndSize;
+        //neuron.writeAndUpdateOut(neuron.tsp.size(), raster_file);
+        output[0] = &jndb.t;
+        output[1] = &jndb.v;
+        assert(jndb.v.size() == jndb.t.size());
+        jndSize = jndb.t.size();
+        size_data_write(jND_file, output, 2, jndSize, 0);
+
+        tmpSize.reserve(Crossb.nCross);
+        for (int i=0;i<Crossb.nCross;i++) {
+            tmpSize.push_back(Crossb.iCross[i+1] - Crossb.iCross[i]);
+            cout << " tmpSize " << i << " : " << tmpSize.back() << endl;
+        }
+        if (Crossb.v.size() != Crossb.t.size()) {
+            cout << Crossb.v.size() <<  "!= " << Crossb.t.size() << endl;
+            assert(Crossb.v.size() == Crossb.t.size());
+        }
+        output[0] = &(Crossb.v);
+        output[1] = &(Crossb.t);
+        nsection_write(jND_file, output, 2, Crossb.iCross, tmpSize);
+
         neuron.clear();
         tsp_sim.clear();
         tsp_bi.clear();

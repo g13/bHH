@@ -14,7 +14,9 @@ typedef struct NeuronLibrary
            *kEE_ptr,  *kEI_ptr, *kIE_ptr,  *kII_ptr,
            *kV_ptr,
              *vRange,   *dtRange, *fE, *fI, dur, tstep,
-             **vLeak, *vLeak_ptr;
+             **vLeak, *vLeak_ptr,
+            ***E_tmax, ***I_tmax, ***tMax,
+            *E_tmax_ptr, *I_tmax_ptr, *tMax_ptr;
     //double vReset, vThres;
     size *idtRange;
     const char *file;
@@ -46,6 +48,73 @@ typedef struct NeuronLibrary
         std::cout << std::endl;
         mxFree(var);
     
+        readArray(tmp,"vRange", dimSize, arraySize, pmat, file);
+        vRange = new double[arraySize];
+        memcpy((void *) vRange, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
+        //std::cout << "vRange:" << std::endl; disp1d(vRange,dimSize[0]);
+        mxDestroyArray(tmp);
+        
+        nv = arraySize;
+    
+        readArray(tmp,"dtRange", dimSize, arraySize, pmat, file);
+        dtRange = new double[arraySize];
+        memcpy((void *) dtRange, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
+        //std::cout << "dtRange:" << std::endl; disp1d(dtRange,dimSize[0]);
+        mxDestroyArray(tmp);
+        
+        ndt = arraySize;
+    
+        readArray(tmp,"fE", dimSize, arraySize, pmat, file);
+        fE = new double[arraySize];
+        memcpy((void *) fE, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
+        //std::cout << "fE:" << std::endl; disp1d(fE,dimSize[0]);
+        mxDestroyArray(tmp);
+    
+        nE = arraySize;
+    
+        readArray(tmp,"fI", dimSize, arraySize, pmat, file);
+        fI = new double[arraySize];
+        memcpy((void *) fI, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
+        //std::cout << "fI:" << std::endl; disp1d(fI,dimSize[0]);
+        mxDestroyArray(tmp);
+
+        nI = arraySize;
+
+        readArray(tmp,"E_tmax", dimSize, arraySize, pmat, file);
+        E_tmax_ptr = new double[arraySize];
+        memcpy((void *) E_tmax_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
+        pointer3d(E_tmax,E_tmax_ptr,dimSize);
+        mxDestroyArray(tmp);
+    
+        readArray(tmp,"I_tmax", dimSize, arraySize, pmat, file);
+        I_tmax_ptr = new double[arraySize];
+        memcpy((void *) I_tmax_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
+        pointer3d(I_tmax,I_tmax_ptr,dimSize);
+        mxDestroyArray(tmp);
+
+        tMax_ptr = new double[(nE+nI)*ndt*nv];
+        for (k=0; k<nv; k++) {
+            for (j=0; j<ndt; j++) {
+                int ii = j*(nE+nI)+k*ndt*(nE+nI);
+                for (i=0; i<nE; i++) {
+                    tMax_ptr[i+ii] = E_tmax[i+j*nE+k*ndt*nE];
+                }
+                for (i=0; i<nI; i++) {
+                    tMax_ptr[i+nE+ii] = E_tmax[i+j*nI+k*ndt*nI];
+                }
+            }
+        }
+        pointer3d(tMax,tMax_ptr,dimSize);
+    
+        dimSize[2] = nE;
+        dimSize[1] = ndt;
+        dimSize[0] = nv;
+        del3d(E_tmax,dimSize);
+        delete []E_tmax_ptr;
+        dimSize[2] = nI;
+        del3d(I_tmax,dimSize);
+        delete []I_tmax_ptr;
+
         readArray(tmp,"sEPSP", dimSize, arraySize, pmat, file);
         EPSP_ptr = new double[arraySize];
         memcpy((void *) EPSP_ptr, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
@@ -110,38 +179,6 @@ typedef struct NeuronLibrary
         pointer2d(vLeak,vLeak_ptr,dimSize);
         mxDestroyArray(tmp);
 
-        readArray(tmp,"vRange", dimSize, arraySize, pmat, file);
-        vRange = new double[arraySize];
-        memcpy((void *) vRange, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        //std::cout << "vRange:" << std::endl; disp1d(vRange,dimSize[0]);
-        mxDestroyArray(tmp);
-        
-        nv = arraySize;
-    
-        readArray(tmp,"dtRange", dimSize, arraySize, pmat, file);
-        dtRange = new double[arraySize];
-        memcpy((void *) dtRange, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        //std::cout << "dtRange:" << std::endl; disp1d(dtRange,dimSize[0]);
-        mxDestroyArray(tmp);
-        
-        ndt = arraySize;
-    
-        readArray(tmp,"fE", dimSize, arraySize, pmat, file);
-        fE = new double[arraySize];
-        memcpy((void *) fE, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        //std::cout << "fE:" << std::endl; disp1d(fE,dimSize[0]);
-        mxDestroyArray(tmp);
-    
-        nE = arraySize;
-    
-        readArray(tmp,"fI", dimSize, arraySize, pmat, file);
-        fI = new double[arraySize];
-        memcpy((void *) fI, (void *)(mxGetPr(tmp)),arraySize*sizeof(double));
-        //std::cout << "fI:" << std::endl; disp1d(fI,dimSize[0]);
-        mxDestroyArray(tmp);
-
-        nI = arraySize;
-    
         readVar(ith,"i", pmat, file);
         readVar(dur,"dur", pmat, file);
         //readVar(vThres,"vThres", pmat, file);
@@ -222,6 +259,12 @@ typedef struct NeuronLibrary
         delete []kII_ptr;
         del2d(vLeak);
         delete []vLeak_ptr;
+
+        dimSize[2] = nE+nI;
+        dimSize[1] = ndt;
+        dimSize[0] = nv;
+        del3d(tMax,dimSize);
+        delete []tMax_ptr;
 
         delete []vRange;
         delete []dtRange;
